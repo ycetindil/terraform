@@ -6,14 +6,14 @@ resource "azurerm_bastion_host" "bas" {
   ip_configuration {
     name = var.ip_configuration.name
     subnet_id = try(
-      data.azurerm_subnet.existing_subnet.id,
-      module.new_subnet.id,
-      "'try' function could not find a valid 'subnet_id'!"
+      data.azurerm_subnet.existing_subnet[0].id,
+      module.new_subnet[0].id,
+      "'try' function could not find a valid 'subnet_id' for the 'ip_configuration': ${var.ip_configuration.name} of the 'bastion_host': ${var.name}!"
     )
     public_ip_address_id = try(
-      data.azurerm_public_ip.existing_public_ip_address.id,
-      module.new_public_ip_address.id,
-      "'try' function could not find a valid 'public_ip_address_id'!"
+      data.azurerm_public_ip.existing_public_ip_address[0].id,
+      module.new_public_ip_address[0].id,
+      "'try' function could not find a valid 'public_ip_address_id' for the 'ip_configuration': ${var.ip_configuration.name} of the 'bastion_host': ${var.name}!"
     )
   }
 }
@@ -32,7 +32,7 @@ module "new_subnet" {
   source = "../subnet"
   count  = var.ip_configuration.subnet.new != null ? 1 : 0
 
-  name             = "AzureBastionSubnet"
+  name             = var.ip_configuration.subnet.new.name
   virtual_network  = var.ip_configuration.subnet.new.virtual_network
   address_prefixes = var.ip_configuration.subnet.new.address_prefixes
 }
