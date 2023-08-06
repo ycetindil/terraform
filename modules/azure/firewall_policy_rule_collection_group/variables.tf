@@ -30,7 +30,8 @@ variable "network_rule_collections" {
     - priority (required): The priority of the network rule collection. The range is 100-65000.
     - rules (required): A map of one or more rule blocks support the following:
       - name (required): The name which should be used for this rule.
-      - protocols (required): Specifies a list of network protocols this rule applies to. Possible values are Any, TCP, UDP, ICMP.
+      - protocols (required): Specifies a list of network protocols this rule applies to.
+        Possible values are Any, TCP, UDP, ICMP.
       - destination_ports (required): Specifies a list of destination ports.
       - source_addresses (optional): Specifies a list of source IP addresses (including CIDR, IP range and *).
       - source_ip_groups (optional): Specifies a list of source IP groups.

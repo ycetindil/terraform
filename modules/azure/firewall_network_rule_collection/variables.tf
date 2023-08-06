@@ -49,7 +49,7 @@ variable "rules" {
     - destination_addresses (optional): Either a list of destination IP addresses and/or IP ranges, or a list of destination Service Tags.
     - destination_ip_groups (optional): A list of destination IP Group IDs for the rule.
     - destination_fqdns (optional): A list of destination FQDNS for the rule.
-    NOTE: You must enable DNS Proxy to use FQDNs in your network rules.
+      NOTE: You must enable DNS Proxy to use FQDNs in your network rules.
     NOTE: At least one of destination_addresses, destination_ip_groups and destination_fqdns must be specified for a rule.
     - destination_ports (required): A list of destination ports.
     - protocols (required): A list of protocols. Possible values are Any, ICMP, TCP and UDP.

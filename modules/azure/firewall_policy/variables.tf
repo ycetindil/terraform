@@ -24,10 +24,7 @@ variable "resource_group_name" {
 
 variable "sku" {
   description = <<EOD
-    (Optional) The SKU Tier of the Firewall Policy. Possible values are:
-    - Standard
-    - Premium
-    - Basic
+    (Optional) The SKU Tier of the Firewall Policy. Possible values are Standard, Premium, and Basic.
     Changing this forces a new Firewall Policy to be created.
   EOD
   default     = null

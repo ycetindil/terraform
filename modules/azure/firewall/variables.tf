@@ -24,9 +24,7 @@ variable "resource_group_name" {
 
 variable "sku_name" {
   description = <<EOD
-    (Required) SKU name of the Firewall. Possible values are:
-    - AZFW_Hub
-    - AZFW_VNet
+    (Required) SKU name of the Firewall. Possible values are AZFW_Hub and AZFW_VNet.
     Changing this forces a new resource to be created.
   EOD
   type        = string
@@ -34,10 +32,7 @@ variable "sku_name" {
 
 variable "sku_tier" {
   description = <<EOD
-    (Required) SKU tier of the Firewall. Possible values are:
-    - Premium
-    - Standard
-    - Basic
+    (Required) SKU tier of the Firewall. Possible values are Premium,Standard, and Basic.
   EOD
   type        = string
 }
