@@ -1,38 +1,19 @@
 locals {
-  gateway_ip_configuration_existing_subnets = {
+  gateway_ip_configuration_subnets = {
     for key, configuration in var.gateway_ip_configurations :
-    key => configuration.subnet.existing
-    if try(configuration.subnet.existing, null) != null
+    key => configuration.subnet
   }
 
-  gateway_ip_configuration_new_subnets = {
-    for key, configuration in var.gateway_ip_configurations :
-    key => configuration.subnet.new
-    if try(configuration.subnet.new, null) != null
-  }
-
-  frontend_ip_configuration_existing_subnets = {
+  frontend_ip_configuration_subnets = {
     for key, configuration in var.frontend_ip_configurations :
-    key => configuration.subnet.existing
-    if try(configuration.subnet.existing, null) != null
+    key => configuration.subnet
+    if configuration.subnet != null
   }
 
-  frontend_ip_configuration_new_subnets = {
+  frontend_ip_configuration_public_ips = {
     for key, configuration in var.frontend_ip_configurations :
-    key => configuration.subnet.new
-    if try(configuration.subnet.new, null) != null
-  }
-
-  frontend_ip_configuration_existing_public_ips = {
-    for key, configuration in var.frontend_ip_configurations :
-    key => configuration.public_ip_address.existing
-    if try(configuration.public_ip_address.existing, null) != null
-  }
-
-  frontend_ip_configuration_new_public_ips = {
-    for key, configuration in var.frontend_ip_configurations :
-    key => configuration.public_ip_address.new
-    if try(configuration.public_ip_address.new, null) != null
+    key => configuration.public_ip_address
+    if configuration.public_ip_address != null
   }
 
   backend_address_pool_nic_resources = [

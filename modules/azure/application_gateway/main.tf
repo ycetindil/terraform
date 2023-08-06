@@ -13,12 +13,8 @@ resource "azurerm_application_gateway" "agw" {
     for_each = var.gateway_ip_configurations
 
     content {
-      name = gateway_ip_configuration.value.name
-      subnet_id = try(
-        data.azurerm_subnet.gateway_ip_configuration_subnets[gateway_ip_configuration.key].id,
-        module.new_gateway_ip_configuration_subnets[gateway_ip_configuration.key].id,
-        "'try' function could not find a valid 'subnet_id' for the 'gateway_ip_configuration': ${gateway_ip_configuration.value.name} of the 'application_gateway': ${var.name}!"
-      )
+      name      = gateway_ip_configuration.value.name
+      subnet_id = data.azurerm_subnet.gateway_ip_configuration_subnets[gateway_ip_configuration.key].id
     }
   }
 
@@ -35,18 +31,10 @@ resource "azurerm_application_gateway" "agw" {
     for_each = var.frontend_ip_configurations
 
     content {
-      name = frontend_ip_configuration.value.name
-      subnet_id = try(
-        data.azurerm_subnet.frontend_ip_configuration_existing_subnets[frontend_ip_configuration.key].id,
-        module.frontend_ip_configuration_new_subnets[frontend_ip_configuration.key].id,
-        "'try' function could not find a valid 'subnet_id' for the 'frontend_ip_configuration': ${frontend_ip_configuration.value.name} of the 'application_gateway': ${var.name}!"
-      )
-      private_ip_address = frontend_ip_configuration.value.private_ip_address
-      public_ip_address_id = try(
-        data.azurerm_public_ip.frontend_ip_configuration_existing_public_ips[frontend_ip_configuration.key].id,
-        module.frontend_ip_configuration_new_public_ips[frontend_ip_configuration.key].id,
-        "'try' function could not find a valid 'public_ip_address_id' for the 'frontend_ip_configuration': ${frontend_ip_configuration.value.name} of the 'application_gateway': ${var.name}!"
-      )
+      name                            = frontend_ip_configuration.value.name
+      subnet_id                       = try(data.azurerm_subnet.frontend_ip_configuration_subnets[frontend_ip_configuration.key].id, null)
+      private_ip_address              = frontend_ip_configuration.value.private_ip_address
+      public_ip_address_id            = try(data.azurerm_public_ip.frontend_ip_configuration_public_ips[frontend_ip_configuration.key].id, null)
       private_ip_address_allocation   = frontend_ip_configuration.value.private_ip_address_allocation
       private_link_configuration_name = frontend_ip_configuration.value.private_link_configuration_name
     }
@@ -193,64 +181,29 @@ resource "azurerm_application_gateway" "agw" {
   }
 }
 
-# If existing 'gateway_ip_configuration.subnet's, retrieve their data.
-data "azurerm_subnet" "existing_gateway_ip_configuration_subnets" {
-  for_each = local.gateway_ip_configuration_existing_subnets
+data "azurerm_subnet" "gateway_ip_configuration_subnets" {
+  for_each = local.gateway_ip_configuration_subnets
 
   name                 = each.value.name
   virtual_network_name = each.value.virtual_network_name
   resource_group_name  = each.value.resource_group_name
 }
 
-# If new 'gateway_ip_configuration.subnet's, create them.
-module "new_gateway_ip_configuration_subnets" {
-  source   = "../subnet"
-  for_each = local.gateway_ip_configuration_new_subnets
-
-  name             = each.value.name
-  virtual_network  = each.value.virtual_network
-  address_prefixes = each.value.address_prefixes
-}
-
-# If existing 'frontend_ip_configuration.subnets'', retrieve their data.
-data "azurerm_subnet" "frontend_ip_configuration_existing_subnets" {
-  for_each = local.frontend_ip_configuration_existing_subnets
+data "azurerm_subnet" "frontend_ip_configuration_subnets" {
+  for_each = local.frontend_ip_configuration_subnets
 
   name                 = each.value.name
   virtual_network_name = each.value.virtual_network_name
   resource_group_name  = each.value.resource_group_name
 }
 
-# If new 'frontend_ip_configuration.subnets'', create them.
-module "frontend_ip_configuration_new_subnets" {
-  for_each = local.frontend_ip_configuration_new_subnets
-  source   = "../subnet"
-
-  name             = each.value.name
-  virtual_network  = each.value.virtual_network
-  address_prefixes = each.value.address_prefixes
-}
-
-# If existing 'frontend_ip_configuration.public_ips'', retrieve their data.
-data "azurerm_public_ip" "frontend_ip_configuration_existing_public_ips" {
-  for_each = local.frontend_ip_configuration_existing_public_ips
+data "azurerm_public_ip" "frontend_ip_configuration_public_ips" {
+  for_each = local.frontend_ip_configuration_public_ips
 
   name                = each.value.name
   resource_group_name = each.value.resource_group_name
 }
 
-# If new 'frontend_ip_configuration.public_ips'', create them.
-module "frontend_ip_configuration_new_public_ips" {
-  for_each = local.frontend_ip_configuration_new_public_ips
-
-  name                = each.value.name
-  location            = each.value.location
-  resource_group_name = each.value.resource_group_name
-  allocation_method   = each.value.allocation_method
-  sku                 = each.value.sku
-}
-
-# Retrieve 'backend_address_pool_nics'' data.
 data "azurerm_network_interface" "backend_address_pool_nics" {
   for_each = local.backend_address_pool_nic_resources
 
@@ -258,7 +211,6 @@ data "azurerm_network_interface" "backend_address_pool_nics" {
   resource_group_name = each.value.resource_group_name
 }
 
-# Retrieve 'backend_address_pool_vmsses'' data.
 data "azurerm_virtual_machine_scale_set" "backend_address_pool_vmsses" {
   for_each = local.backend_address_pool_vmss_resources
 
@@ -266,7 +218,6 @@ data "azurerm_virtual_machine_scale_set" "backend_address_pool_vmsses" {
   resource_group_name = each.value.resource_group_name
 }
 
-# Retrieve 'backend_address_pool_pips'' data.
 data "azurerm_public_ip" "backend_address_pool_pips" {
   for_each = local.backend_address_pool_pip_resources
 
@@ -274,7 +225,6 @@ data "azurerm_public_ip" "backend_address_pool_pips" {
   resource_group_name = each.value.resource_group_name
 }
 
-# Retrieve 'backend_address_pool_lapps'' data.
 data "azurerm_linux_web_app" "backend_address_pool_lapps" {
   for_each = local.backend_address_pool_lapp_resources
 
@@ -282,7 +232,6 @@ data "azurerm_linux_web_app" "backend_address_pool_lapps" {
   resource_group_name = each.value.resource_group_name
 }
 
-# Retrieve 'backend_address_pool_wapps'' data.
 data "azurerm_windows_web_app" "backend_address_pool_wapps" {
   for_each = local.backend_address_pool_wapp_resources
 

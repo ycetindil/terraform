@@ -44,18 +44,14 @@ variable "gateway_ip_configurations" {
   description = <<EOD
     (Required) A map of one or more gateway_ip_configuration blocks supports the following:
     - name - (Required) The Name of this Gateway IP Configuration.
-    - subnet - (Required) The ID of the Subnet which the Application Gateway should be connected to.
-      'subnet.new' is passed directly to the 'subnet' module.
+    - subnet - (Required) The Subnet which the Application Gateway should be connected to.
   EOD
   type = map(object({
     name = string
     subnet = object({
-      existing = optional(object({
-        name                       = string
-        virtual_network_name       = string
-        subnet_resource_group_name = string
-      }), null)
-      new = optional(any, null)
+      name                       = string
+      virtual_network_name       = string
+      subnet_resource_group_name = string
     })
   }))
 }
@@ -76,33 +72,26 @@ variable "frontend_ip_configurations" {
   description = <<EOD
     (Required) A map of one or more frontend_ip_configuration blocks supports the following:
     - name - (Required) The name of the Frontend IP Configuration.
-    - subnet - (Optional) The Subnet.
-      'subnet.new' is passed directly to the 'subnet' module.
+    - subnet - (Optional) The Subnet to use for the Application Gateway.
     - private_ip_address - (Optional) The Private IP Address to use for the Application Gateway.
     - public_ip_address - (Optional) The Public IP Address which the Application Gateway should use.
       The allocation method for the Public IP Address depends on the sku of this Application Gateway. Please refer to https://docs.microsoft.com/azure/virtual-network/public-ip-addresses#application-gateways for details.
-      'public_ip_address.new' is passed directly to the 'public_ip_address' module.
     - private_ip_address_allocation - (Optional) The Allocation Method for the Private IP Address.
       Possible values are Dynamic and Static.
     - private_link_configuration_name - (Optional) The name of the private link configuration to use for this frontend IP configuration.
   EOD
   type = map(object({
     name = string
-    subnet = optional({
-      existing = optional(object({
-        name                = string
-        resource_group_name = string
-      }), null)
-      new = optional(any, null)
-    }, null)
+    subnet = optional(object({
+      name                 = string
+      virtual_network_name = string
+      resource_group_name  = string
+    }), null)
     private_ip_address = optional(string, null)
-    public_ip_address = optional({
-      existing = optional(object({
-        name                = string
-        resource_group_name = string
-      }), null)
-      new = optional(any, null)
-    }, null)
+    public_ip_address = optional(object({
+      name                = string
+      resource_group_name = string
+    }), null)
     private_ip_address_allocation   = optional(string, null)
     private_link_configuration_name = optional(string, null)
   }))

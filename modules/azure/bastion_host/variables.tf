@@ -29,44 +29,22 @@ variable "ip_configuration" {
     - name (required): The name of the IP configuration.
       Changing this forces a new resource to be created.
     - subnet (required): Reference to a subnet in which this Bastion Host has been created.
-      'subnet.new' is passed directly to the 'subnet' module.
       Changing this forces a new resource to be created.
       Note: The Subnet used for the Bastion Host must have the name AzureBastionSubnet and the subnet mask must be at least a /26.
     - public_ip_address (required): Reference to a Public IP Address to associate with this Bastion Host.
-      'public_ip_address.new' is passed directly to the 'public_ip_address' module.
       Changing this forces a new resource to be created.
     Changing ip_configuration block forces a new resource to be created.
   EOD
   type = object({
     name = string
     subnet = object({
-      existing = optional(object({
-        name                 = string
-        virtual_network_name = string
-        resource_group_name  = string
-      }), null)
-      new = optional(any, null)
+      name                 = string
+      virtual_network_name = string
+      resource_group_name  = string
     })
     public_ip_address = object({
-      existing = optional(object({
-        name                = string
-        resource_group_name = string
-      }), null)
-      new = optional(any, null)
+      name                = string
+      resource_group_name = string
     })
   })
-  validation {
-    condition = (
-      (var.ip_configuration.subnet.existing != null && var.ip_configuration.subnet.new == null) ||
-      (var.ip_configuration.subnet.existing == null && var.ip_configuration.subnet.new != null)
-    )
-    error_message = "'ip_configuration.subnet' should be either 'existing' or 'new', not both, not none!"
-  }
-  validation {
-    condition = (
-      (var.ip_configuration.public_ip_address.existing != null && var.ip_configuration.public_ip_address.new == null) ||
-      (var.ip_configuration.public_ip_address.existing == null && var.ip_configuration.public_ip_address.new != null)
-    )
-    error_message = "'ip_configuration.public_ip_address' should be either 'existing' or 'new', not both, not none!"
-  }
 }
