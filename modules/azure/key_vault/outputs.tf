@@ -1,3 +1,3 @@
 output "id" {
-  value = azurerm_key_vault.key_vault.id
+  value = azurerm_key_vault.kv.id
 }
