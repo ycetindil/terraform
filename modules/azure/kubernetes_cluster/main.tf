@@ -1,50 +1,52 @@
-data "azurerm_subnet" "subnet_aks" {
-  name                 = var.subnet_aks.name
-  virtual_network_name = var.subnet_aks.virtual_network_name
-  resource_group_name  = var.subnet_aks.resource_group_name
-}
-
-data "azurerm_subnet" "subnet_agw" {
-  name                 = var.subnet_agw.name
-  virtual_network_name = var.subnet_agw.virtual_network_name
-  resource_group_name  = var.subnet_agw.resource_group_name
-}
-
-resource "azurerm_kubernetes_cluster" "kubernetes_cluster" {
+# Manages a Managed Kubernetes Cluster (also known as AKS / Azure Kubernetes Service)
+# Note: Due to the fast-moving nature of AKS, we recommend using the latest version of the Azure Provider when using AKS.
+# Note: All arguments including the client secret will be stored in the raw state as plain-text. Read more about sensitive data in state at https://www.terraform.io/docs/state/sensitive-data.html.
+resource "azurerm_kubernetes_cluster" "aks" {
   name                          = var.name
   location                      = var.location
   resource_group_name           = var.resource_group_name
-  dns_prefix                    = "${var.name}-dns"
-  node_resource_group           = "${var.name}-node-rg"
-  public_network_access_enabled = var.public_network_access_enabled
+  dns_prefix                    = var.dns_prefix
+  dns_prefix_private_cluster    = var.dns_prefix_private_cluster
+  node_resource_group           = var.node_resource_group
   private_cluster_enabled       = var.private_cluster_enabled
+  public_network_access_enabled = var.public_network_access_enabled
 
   default_node_pool {
     name           = var.default_node_pool.name
     node_count     = var.default_node_pool.node_count
     vm_size        = var.default_node_pool.vm_size
-    vnet_subnet_id = data.azurerm_subnet.subnet_aks.id
+    vnet_subnet_id = try(data.azurerm_subnet.default_node_pool_subnet[0].id, null)
   }
 
-  identity {
-    type = var.identity.type
-  }
-
-  dynamic "ingress_application_gateway" {
-    for_each = var.ingress_application_gateway.enabled ? [1] : []
+  dynamic "identity" {
+    for_each = var.identity != null ? [1] : [0]
 
     content {
-      gateway_name = var.ingress_application_gateway.name
-      subnet_id    = data.azurerm_subnet.subnet_agw.id
+      type         = var.identity.type
+      identity_ids = try(data.azurerm_user_assigned_identity.user_assigned_identities[*].id, null)
     }
   }
 
-  network_profile {
-    network_plugin     = var.network_profile.network_plugin
-    network_policy     = var.network_profile.network_policy
-    service_cidr       = var.network_profile.service_cidr
-    dns_service_ip     = var.network_profile.dns_service_ip
-    docker_bridge_cidr = var.network_profile.docker_bridge_cidr
-    outbound_type      = var.network_profile.outbound_type
+  dynamic "network_profile" {
+    for_each = var.network_profile != null ? [1] : []
+
+    content {
+      network_plugin = var.network_profile.network_plugin
+      network_policy = var.network_profile.network_policy
+      dns_service_ip = var.network_profile.dns_service_ip
+      outbound_type  = var.network_profile.outbound_type
+      service_cidr   = var.network_profile.service_cidr
+    }
+  }
+
+  dynamic "ingress_application_gateway" {
+    for_each = var.ingress_application_gateway != null ? [1] : []
+
+    content {
+      gateway_id   = var.ingress_application_gateway.gateway_id
+      gateway_name = var.ingress_application_gateway.gateway_name
+      subnet_cidr  = var.ingress_application_gateway.subnet_cidr
+      subnet_id    = try(data.azurerm_subnet.ingress_application_gateway_subnet[0].id, null)
+    }
   }
 }
