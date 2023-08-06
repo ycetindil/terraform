@@ -24,7 +24,8 @@ variable "resource_group_name" {
 
 variable "sku" {
   description = <<EOD
-    (Optional) The SKU Tier of the Firewall Policy. Possible values are Standard, Premium, and Basic.
+    (Optional) The SKU Tier of the Firewall Policy.
+    Possible values are Standard, Premium, and Basic.
     Changing this forces a new Firewall Policy to be created.
   EOD
   default     = null
@@ -42,7 +43,8 @@ variable "firewall_policy_rule_collection_groups" {
       The range is 100-65000.
     - network_rule_collections - (Optional) A map of one or more network_rule_collection blocks supports the following:
       - name (required): The name which should be used for this network rule collection.
-      - action (required): The action to take for the network rules in this collection. Possible values are Allow and Deny.
+      - action (required): The action to take for the network rules in this collection.
+        Possible values are Allow and Deny.
       - priority (required): The priority of the network rule collection. The range is 100-65000.
       - rules (required): A map of one or more rule blocks supports the following:
         - name (required): The name which should be used for this rule.
@@ -56,10 +58,10 @@ variable "firewall_policy_rule_collection_groups" {
         - destination_fqdns (optional): Specifies a list of destination FQDNs.
   EOD
   default     = {}
-  type        = map(object({
+  type = map(object({
     name = string
     firewall_policy = object({
-      name = string
+      name                = string
       resource_group_name = string
     })
     priority = string

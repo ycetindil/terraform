@@ -70,8 +70,8 @@ variable "ip_configuration" {
       resource_group_name  = string
     }), null)
     public_ip_address = optional(object({
-      name                 = string
-      resource_group_name  = string
+      name                = string
+      resource_group_name = string
     }), null)
   })
 }
@@ -95,8 +95,8 @@ variable "management_ip_configuration" {
       resource_group_name  = string
     })
     public_ip_address = object({
-      name                 = string
-      resource_group_name  = string
+      name                = string
+      resource_group_name = string
     })
   })
 }
@@ -140,12 +140,12 @@ variable "firewall_network_rule_collections" {
       - protocols (required): A list of protocols. Possible values are Any, ICMP, TCP and UDP.
   EOD
   default     = {}
-  type        = map(object({
-    name = string
-    firewall_name = string
+  type = map(object({
+    name                         = string
+    firewall_name                = string
     firewall_resource_group_name = string
-    priority = number
-    action = string
+    priority                     = number
+    action                       = string
     rules = map(object({
       name                  = string
       description           = optional(string, null)

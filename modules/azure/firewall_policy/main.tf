@@ -1,3 +1,5 @@
+# Manages a Firewall Policy.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall_policy
 resource "azurerm_firewall_policy" "fwp" {
   name                = var.name
   location            = var.location
@@ -5,7 +7,9 @@ resource "azurerm_firewall_policy" "fwp" {
   sku                 = var.sku
 }
 
-resource "azurerm_firewall_policy_rule_collection_group" "fwprcgs" {
+# Manages a Firewall Policy Rule Collection Group.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall_policy_rule_collection_group
+resource "azurerm_firewall_policy_rule_collection_group" "fwprcgS" {
   for_each = var.firewall_policy_rule_collection_groups
 
   name               = each.value.name

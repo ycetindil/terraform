@@ -1,3 +1,5 @@
+# Manages an Application Insights component.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_insights
 resource "azurerm_application_insights" "appi" {
   name                = var.name
   location            = var.location
@@ -8,11 +10,4 @@ resource "azurerm_application_insights" "appi" {
   lifecycle {
     ignore_changes = [workspace_id]
   }
-}
-
-data "azurerm_log_analytics_workspace" "log_analytics_workspace" {
-  count = var.log_analytics_workspace != null ? 1 : 0
-
-  name                = var.log_analytics_workspace.name
-  resource_group_name = var.log_analytics_workspace.resource_group_name
 }
