@@ -1,3 +1,12 @@
+# Use this data source to access information about an existing User Assigned Identity.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity
+data "azurerm_user_assigned_identity" "user_assigned_identities" {
+  count = var.identity != null ? length(var.identity.user_assigned_identities) : 0
+
+  name                = var.identity.user_assigned_identities[count.index].name
+  resource_group_name = var.identity.user_assigned_identities[count.index].resource_group_name
+}
+
 # Use this data source to access information about an existing Subnet within a Virtual Network.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet
 data "azurerm_subnet" "gateway_ip_configuration_subnets" {

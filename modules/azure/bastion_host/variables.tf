@@ -25,15 +25,16 @@ variable "resource_group_name" {
 
 variable "ip_configuration" {
   description = <<EOD
-    (Required) An ip_configuration block supports the following:
+    (Required) A ip_configuration block as defined below.
+    Changing this forces a new resource to be created.
+    A ip_configuration block supports the following:
     - name (required): The name of the IP configuration.
       Changing this forces a new resource to be created.
-    - subnet (required): Reference to a subnet in which this Bastion Host has been created.
+    - subnet (required): Reference to an existing subnet in which this Bastion Host has been created.
       Changing this forces a new resource to be created.
       Note: The Subnet used for the Bastion Host must have the name AzureBastionSubnet and the subnet mask must be at least a /26.
-    - public_ip_address (required): Reference to a Public IP Address to associate with this Bastion Host.
+    - public_ip_address (required): Reference to an existing Public IP Address to associate with this Bastion Host.
       Changing this forces a new resource to be created.
-    Changing ip_configuration block forces a new resource to be created.
   EOD
   type = object({
     name = string

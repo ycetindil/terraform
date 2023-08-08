@@ -34,7 +34,7 @@ variable "application_type" {
 
 variable "log_analytics_workspace" {
   description = <<EOD
-    (Optional) Specifies a log analytics workspace resource.
+    (Optional) Specifies an existing log analytics workspace resource.
   EOD
   default     = null
   type = object({

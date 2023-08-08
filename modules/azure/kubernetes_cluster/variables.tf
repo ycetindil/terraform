@@ -108,6 +108,7 @@ variable "identity" {
     - type - (Required) Specifies the type of Managed Service Identity that should be configured on this Kubernetes Cluster.
       Possible values are SystemAssigned or UserAssigned.
     - identity_ids - (Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Kubernetes Cluster.
+      Gathered by the module by requesting the references to the User Assigned Managed Identity list.
       NOTE: This is required when type is set to UserAssigned.
     NOTE: One of either identity or service_principal must be specified.
   EOD
@@ -143,7 +144,7 @@ variable "network_profile" {
     Changing this forces a new resource to be created.
     NOTE: If network_profile is not defined, kubenet profile will be used by default.
   EOD
-  default = null
+  default     = null
   type = object({
     network_plugin = string
     network_policy = optional(string, null)

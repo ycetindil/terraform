@@ -12,14 +12,9 @@ variable "key_vault" {
 
 variable "object" {
   description = <<EOD
-    (Required) The necessary information block of the resource, or a user, service principal or security group in the Azure Active Directory tenant for the vault.
-    - type - (Required) Possible values are:
-      - user
-      - group
-      - service_principal
-      - user_assigned_identity
-      - system_assigned_identity
-        Azure services that can use managed identities are listed at https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/managed-identities-status
+    (Required) The necessary information of the resource, or a user, service principal or security group in the Azure Active Directory tenant for the vault.
+    - type - (Required) Possible values are user, group, service_principal, user_assigned_identity, system_assigned_identity.
+      Azure services that can use managed identities are listed at https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/managed-identities-status
       - user - (Optional) This block supports the following:
         - name - (Required) The Name of the User.
       - group - (Optional) This block supports the following:
@@ -64,7 +59,8 @@ variable "object" {
 
 variable "certificate_permissions" {
   description = <<EOD
-    (Optional) List of certificate permissions, must be one or more from the following: ["Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers", "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"]
+    (Optional) List of certificate permissions.
+    Must be one or more from the following: ["Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers", "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"]
   EOD
   default     = null
   type        = list(string)
@@ -72,7 +68,8 @@ variable "certificate_permissions" {
 
 variable "key_permissions" {
   description = <<EOD
-    (Optional) List of key permissions, must be one or more from the following: ["Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover", "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey", "Release", "Rotate", "GetRotationPolicy", "SetRotationPolicy"]
+    (Optional) List of key permissions.
+    Must be one or more from the following: ["Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover", "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey", "Release", "Rotate", "GetRotationPolicy", "SetRotationPolicy"]
   EOD
   default     = null
   type        = list(string)
@@ -80,7 +77,8 @@ variable "key_permissions" {
 
 variable "secret_permissions" {
   description = <<EOD
-    (Optional) List of secret permissions, must be one or more from the following: ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
+    (Optional) List of secret permissions.
+    Must be one or more from the following: ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
   EOD
   default     = null
   type        = list(string)
@@ -88,7 +86,8 @@ variable "secret_permissions" {
 
 variable "storage_permissions" {
   description = <<EOD
-    (Optional) List of storage permissions, must be one or more from the following: ["Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS", "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"]
+    (Optional) List of storage permissions.
+    Must be one or more from the following: ["Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS", "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"]
   EOD
   default     = null
   type        = list(string)

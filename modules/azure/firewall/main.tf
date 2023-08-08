@@ -43,8 +43,8 @@ resource "azurerm_firewall_network_rule_collection" "fwnrcS" {
   for_each = var.firewall_network_rule_collections
 
   name                = each.value.name
-  azure_firewall_name = each.value.firewall_name
-  resource_group_name = each.value.firewall_resource_group_name
+  azure_firewall_name = azurerm_firewall.fw.name
+  resource_group_name = azurerm_firewall.fw.resource_group_name
   priority            = each.value.priority
   action              = each.value.action
 

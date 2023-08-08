@@ -24,7 +24,8 @@ variable "resource_group_name" {
 
 variable "sku" {
   description = <<EOD
-    (Required) A sku block supports the following:
+    (Required) A sku block as defined below.
+    A sku block supports the following:
     - name - (Required) The Name of the SKU to use for this Application Gateway.
       Possible values are Standard_Small, Standard_Medium, Standard_Large, Standard_v2, WAF_Medium, WAF_Large, and WAF_v2.
     - tier - (Required) The Tier of the SKU to use for this Application Gateway.
@@ -40,11 +41,30 @@ variable "sku" {
   })
 }
 
+variable "identity" {
+  description = <<EOD
+    (Optional) An identity block as defined below.
+    An identity block supports the following:
+    - type - (Required) Specifies the type of Managed Service Identity that should be configured on this Application Gateway.
+      Only possible value is UserAssigned.
+    - user_assigned_identities - (Required) Specifies a list of existing User Assigned Managed Identities to be assigned to this Application Gateway.
+  EOD
+  default     = null
+  type = object({
+    type = string
+    user_assigned_identities = list(object({
+      name                = string
+      resource_group_name = string
+    }))
+  })
+}
+
 variable "gateway_ip_configurations" {
   description = <<EOD
-    (Required) A map of one or more gateway_ip_configuration blocks supports the following:
+    (Required) (Required) One or more gateway_ip_configuration blocks as defined below.
+    A gateway_ip_configuration block supports the following:
     - name - (Required) The Name of this Gateway IP Configuration.
-    - subnet - (Required) The Subnet which the Application Gateway should be connected to.
+    - subnet - (Required) The existing Subnet which the Application Gateway should be connected to.
   EOD
   type = map(object({
     name = string
@@ -58,7 +78,8 @@ variable "gateway_ip_configurations" {
 
 variable "frontend_ports" {
   description = <<EOD
-    (Required) A map of one or more frontend_port blocks supports the following:
+    (Required) One or more frontend_port blocks as defined below.
+    A frontend_port block supports the following:
     - name - (Required) The name of the Frontend Port.
     - port - (Required) The port used for this Frontend Port.
   EOD
@@ -70,11 +91,12 @@ variable "frontend_ports" {
 
 variable "frontend_ip_configurations" {
   description = <<EOD
-    (Required) A map of one or more frontend_ip_configuration blocks supports the following:
+    (Required) (Required) One or more frontend_ip_configuration blocks as defined below.
+    A frontend_ip_configuration block supports the following:
     - name - (Required) The name of the Frontend IP Configuration.
-    - subnet - (Optional) The Subnet to use for the Application Gateway.
+    - subnet - (Optional) The existing Subnet to use for the Application Gateway.
     - private_ip_address - (Optional) The Private IP Address to use for the Application Gateway.
-    - public_ip_address - (Optional) The Public IP Address which the Application Gateway should use.
+    - public_ip_address - (Optional) The existing Public IP Address which the Application Gateway should use.
       The allocation method for the Public IP Address depends on the sku of this Application Gateway. Please refer to https://docs.microsoft.com/azure/virtual-network/public-ip-addresses#application-gateways for details.
     - private_ip_address_allocation - (Optional) The Allocation Method for the Private IP Address.
       Possible values are Dynamic and Static.
@@ -99,17 +121,18 @@ variable "frontend_ip_configurations" {
 
 variable "backend_address_pools" {
   description = <<EOT
-    (Required) A map of one or more backend_address_pool blocks supports the following:
+    (Required) One or more backend_address_pool blocks as defined below.
+    A backend_address_pool block supports the following:
     - name - (Required) The name of the Backend Address Pool.
-    - resources - (Optional) A map of resources supports the following:
+    - resources - (Optional) A map of existing resources supports the following:
       - type - (Required) - The type of the resource.
         Possible values are nic for network interface card, vmss for virtual machine scale set, pip for public IP address, ip for internal IP address, fqdn for fully qualified domain name, lapp for linux app service, and wapp for windows app service.
       - name - (Optional) The name of the resource.
-        Required if resource type is one of: nic, vmss, lapp, or wapp.
+        Required if resource type is one of: nic, vmss, pip, lapp, or wapp.
       - resource_group_name - (Optional) The name of the resource group of the resource.
-        Required if resource type is one of: nic, vmss, lapp, or wapp.
+        Required if resource type is one of: nic, vmss, pip, lapp, or wapp.
       - ip - (Optional) An IP as the resource.
-        Required if resource type is one of: pip, or ip.
+        Required if resource type is ip.
       - fqdn - (Optional) An FQDN as the resource.
         Required if resource type is fqdn.
   EOT
@@ -125,44 +148,10 @@ variable "backend_address_pools" {
   }))
 }
 
-variable "backend_http_settingses" {
-  description = <<EOD
-    (Required) A map of one or more backend_http_settings blocks supports the following:
-    - name - (Required) The name of the Backend HTTP Settings Collection.
-    - cookie_based_affinity - (Required) Is Cookie-Based Affinity enabled?
-      Possible values are Enabled and Disabled.
-    - port - (Required) The port which should be used for this Backend HTTP Settings Collection.
-    - protocol - (Required) The Protocol which should be used.
-      Possible values are Http and Https.
-    - affinity_cookie_name - (Optional) The name of the affinity cookie.
-    - path - (Optional) The Path which should be used as a prefix for all HTTP requests.
-    - probe_name - (Optional) The name of an associated HTTP Probe.
-    - request_timeout - (Optional) The request timeout in seconds, which must be between 1 and 86400 seconds.
-      Defaults to 30.
-    - host_name - (Optional) Host header to be sent to the backend servers.
-      Cannot be set if pick_host_name_from_backend_address is set to true.
-    - pick_host_name_from_backend_address - (Optional) Whether host header should be picked from the host name of the backend server.
-      Defaults to false.
-    - trusted_root_certificate_names - (Optional) A list of trusted_root_certificate names.
-  EOD
-  type = map(object({
-    name                                = string
-    cookie_based_affinity               = string
-    port                                = number
-    protocol                            = string
-    affinity_cookie_name                = optional(string, null)
-    path                                = optional(string, null)
-    probe_name                          = optional(string, null)
-    request_timeout                     = optional(number, null)
-    host_name                           = optional(string, null)
-    pick_host_name_from_backend_address = optional(bool, null)
-    trusted_root_certificate_names      = optional(list(string), null)
-  }))
-}
-
 variable "probes" {
   description = <<EOD
-    (Optional) A map of one or more probe blocks support the following:
+    (Optional) One or more probe blocks as defined below.
+    A probe block support the following:
     - name - (Required) The Name of the Probe.
     - host - (Optional) The Hostname used for this Probe.
       If the Application Gateway is configured for a single site, by default the Host name should be specified as 127.0.0.1, unless otherwise configured in custom probe.
@@ -200,9 +189,46 @@ variable "probes" {
   }))
 }
 
+variable "backend_http_settingses" {
+  description = <<EOD
+    (Required) One or more backend_http_settings blocks as defined below.
+    A backend_http_settings block supports the following:
+    - name - (Required) The name of the Backend HTTP Settings Collection.
+    - cookie_based_affinity - (Required) Is Cookie-Based Affinity enabled?
+      Possible values are Enabled and Disabled.
+    - port - (Required) The port which should be used for this Backend HTTP Settings Collection.
+    - protocol - (Required) The Protocol which should be used.
+      Possible values are Http and Https.
+    - affinity_cookie_name - (Optional) The name of the affinity cookie.
+    - path - (Optional) The Path which should be used as a prefix for all HTTP requests.
+    - probe_name - (Optional) The name of an associated HTTP Probe.
+    - request_timeout - (Optional) The request timeout in seconds, which must be between 1 and 86400 seconds.
+      Defaults to 30.
+    - host_name - (Optional) Host header to be sent to the backend servers.
+      Cannot be set if pick_host_name_from_backend_address is set to true.
+    - pick_host_name_from_backend_address - (Optional) Whether host header should be picked from the host name of the backend server.
+      Defaults to false.
+    - trusted_root_certificate_names - (Optional) A list of trusted_root_certificate names.
+  EOD
+  type = map(object({
+    name                                = string
+    cookie_based_affinity               = string
+    port                                = number
+    protocol                            = string
+    affinity_cookie_name                = optional(string, null)
+    path                                = optional(string, null)
+    probe_name                          = optional(string, null)
+    request_timeout                     = optional(number, null)
+    host_name                           = optional(string, null)
+    pick_host_name_from_backend_address = optional(bool, null)
+    trusted_root_certificate_names      = optional(list(string), null)
+  }))
+}
+
 variable "http_listeners" {
   description = <<EOD
-    (Required) A map of one or more http_listener blocks supports the following:
+    (Required) One or more http_listener blocks as defined below.
+    A http_listener block supports the following:
     - name - (Required) The Name of the HTTP Listener.
     - frontend_ip_configuration_name - (Required) The Name of the Frontend IP Configuration used for this HTTP Listener.
     - frontend_port_name - (Required) The Name of the Frontend Port use for this HTTP Listener.
@@ -235,7 +261,8 @@ variable "http_listeners" {
 
 variable "request_routing_rules" {
   description = <<EOD
-    (Required) A map of one or more request_routing_rule blocks supports the following:
+    (Required) One or more request_routing_rule blocks as defined below.
+    A request_routing_rule block supports the following:
     - name - (Required) The Name of this Request Routing Rule.
     - rule_type - (Required) The Type of Routing that should be used for this Rule.
       Possible values are Basic and PathBasedRouting.
@@ -268,7 +295,8 @@ variable "request_routing_rules" {
 
 variable "url_path_maps" {
   description = <<EOD
-    (Optional) A map of one or more url_path_map blocks supports the following:
+    (Optional) One or more url_path_map blocks as defined below.
+    A url_path_map block supports the following:
     - name - (Required) The Name of the URL Path Map.
     - default_backend_address_pool_name - (Optional) The Name of the Default Backend Address Pool which should be used for this URL Path Map.
       Cannot be set if default_redirect_configuration_name is set.

@@ -33,14 +33,15 @@ variable "tags" {
 
 variable "cdn_frontdoor_custom_domains" {
   description = <<EOD
-    (Optional) A map of zero or more cdn_frontdoor_custom_domains supports the following:
+    (Optional) Created by azurerm_cdn_frontdoor_custom_domain subresource.
+    A map of zero or more cdn_frontdoor_custom_domains supports the following:
     - name - (Required) The name which should be used for this Front Door Custom Domain.
       Possible values must be between 2 and 260 characters in length, must begin with a letter or number, end with a letter or number and contain only letters, numbers and hyphens.
       Changing this forces a new Front Door Custom Domain to be created.
     - host_name - (Required) The host name of the domain.
-      The host_name field must be the FQDN of your domain(e.g. contoso.fabrikam.com).
+      The host_name field must be the FQDN of your domain (e.g. contoso.fabrikam.com).
       Changing this forces a new Front Door Custom Domain to be created.
-    - dns_zone - (Optional) Reference to the Azure DNS Zone which should be used for this Front Door Custom Domain.
+    - dns_zone - (Optional) Reference to the existing Azure DNS Zone which should be used for this Front Door Custom Domain.
       If you are using Azure to host your DNS domains, you must delegate the domain provider's domain name system (DNS) to an Azure DNS Zone. For more information, see https://learn.microsoft.com/azure/dns/dns-delegate-domain-azure-dns.
       Otherwise, if you're using your own domain provider to handle your DNS, you must validate the Front Door Custom Domain by creating the DNS TXT records manually.
     - tls - (Required) A tls block supports the following:
@@ -71,7 +72,8 @@ variable "cdn_frontdoor_custom_domains" {
 
 variable "cdn_frontdoor_endpoints" {
   description = <<EOD
-    (Optional) A map of zero or more cdn_frontdoor_endpoints supports the following:
+    (Optional) Created by azurerm_cdn_frontdoor_endpoint subresource.
+    A map of zero or more cdn_frontdoor_endpoints supports the following:
     - name - (Required) The name which should be used for this Front Door Endpoint.
       Changing this forces a new Front Door Endpoint to be created.
     - tags - (Optional) Specifies a mapping of tags which should be assigned to the Front Door Endpoint.
@@ -85,7 +87,8 @@ variable "cdn_frontdoor_endpoints" {
 
 variable "cdn_frontdoor_origin_groups" {
   description = <<EOD
-    (Optional) A map of zero or more cdn_frontdoor_origin_groups supports the following:
+    (Optional) Created by azurerm_cdn_frontdoor_origin_group subresource.
+    A map of zero or more cdn_frontdoor_origin_groups supports the following:
     - name - (Required) The name which should be used for this Front Door Origin Group.
       Changing this forces a new Front Door Origin Group to be created.
     - session_affinity_enabled - (Optional) Specifies whether session affinity should be enabled on this host.
@@ -136,7 +139,8 @@ variable "cdn_frontdoor_origin_groups" {
 
 variable "cdn_frontdoor_origins" {
   description = <<EOD
-    (Optional) A map of zero or more cdn_frontdoor_origins supports the following:
+    (Optional) Created by azurerm_cdn_frontdoor_origin subresource.
+    A map of zero or more cdn_frontdoor_origins supports the following:
     - name - (Required) The name which should be used for this Front Door Origin.
       Changing this forces a new Front Door Origin to be created.
     - cdn_frontdoor_origin_group - (Required) The key of the Front Door Origin Group within which this Front Door Origin should exist.
@@ -208,7 +212,8 @@ variable "cdn_frontdoor_origins" {
 
 variable "cdn_frontdoor_routes" {
   description = <<EOD
-    (Optional) A map of zero or more cdn_frontdoor_routes supports the following:
+    (Optional) Created by azurerm_cdn_frontdoor_route subresource.
+    A map of zero or more cdn_frontdoor_routes supports the following:
     - name - (Required) The name which should be used for this Front Door Route.
       Valid values must begin with a letter or number, end with a letter or number and may only contain letters, numbers and hyphens with a maximum length of 90 characters.
       Changing this forces a new Front Door Route to be created.
@@ -256,7 +261,8 @@ variable "cdn_frontdoor_routes" {
 
 variable "cdn_frontdoor_rule_sets" {
   description = <<EOD
-    (Optional) A map of zero or more cdn_frontdoor_rule_sets supports the following:
+    (Optional) Created by azurerm_cdn_frontdoor_rule_set subresource.
+    A map of zero or more cdn_frontdoor_rule_sets supports the following:
     - name - (Required) The name which should be used for this Front Door Rule Set.
       Changing this forces a new Front Door Rule Set to be created.
   EOD
@@ -268,7 +274,8 @@ variable "cdn_frontdoor_rule_sets" {
 
 variable "cdn_frontdoor_rules" {
   description = <<EOD
-    (Optional) A map of zero or more cdn_frontdoor_rules supports the following:
+    (Optional) Created by azurerm_cdn_frontdoor_rule subresource.
+    A map of zero or more cdn_frontdoor_rules supports the following:
     - name - (Required) The name which should be used for this Front Door Rule.
       Possible values must be between 1 and 260 characters in length, begin with a letter and may contain only letters and numbers.
       Changing this forces a new Front Door Rule to be created.

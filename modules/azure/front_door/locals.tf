@@ -11,7 +11,7 @@ locals {
       name                = origin.host.name
       resource_group_name = origin.host.resource_group_name
     }
-    if origin.host.private_link_service_enabled && origin.host.type == "Microsoft.Network/loadBalancers"
+    if origin.host.type == "Microsoft.Network/loadBalancers"
   }
 
   # Gather all 'private_link_service's from all origins
@@ -20,7 +20,7 @@ locals {
       name                = origin.private_link.target.name
       resource_group_name = origin.private_link.target.resource_group_name
     }
-    if origin.host.private_link_service_enabled && origin.host.type == "Microsoft.Network/loadBalancers"
+    if origin.host.type == "Microsoft.Network/loadBalancers" && origin.private_link != null
   }
 
   # Gather all 'storage_blob's from all origins

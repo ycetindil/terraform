@@ -34,10 +34,12 @@ variable "sku" {
 
 variable "firewall_policy_rule_collection_groups" {
   description = <<EOD
-    (Optional) A map of zero or more firewall_policy_rule_collection_group blocks supports the following:
+    (Optional) Created by azurerm_firewall_policy_rule_collection_group subresource.
+    A map of zero or more firewall_policy_rule_collection_group blocks supports the following:
     - name - (Required) The name which should be used for this Firewall Policy Rule Collection Group.
       Changing this forces a new Firewall Policy Rule Collection Group to be created.
     - firewall_policy_id - (Required) The ID of the Firewall Policy where the Firewall Policy Rule Collection Group should exist.
+      Provided by the module.
       Changing this forces a new Firewall Policy Rule Collection Group to be created.
     - priority - (Required) The priority of the Firewall Policy Rule Collection Group.
       The range is 100-65000.
@@ -59,11 +61,7 @@ variable "firewall_policy_rule_collection_groups" {
   EOD
   default     = {}
   type = map(object({
-    name = string
-    firewall_policy = object({
-      name                = string
-      resource_group_name = string
-    })
+    name     = string
     priority = string
     network_rule_collections = optional(map(object({
       name     = string

@@ -1,103 +1,10 @@
-data "azurerm_ssh_public_key" "admin_ssh_keys" {
-  for_each = {
-    for key, ssh_key in var.admin_ssh_keys :
-    key => ssh_key.public_key.existing_on_azure
-    if ssh_key.public_key.existing_on_azure != null
-  }
-
-  name                = each.value.name
-  resource_group_name = each.value.resource_group_name
-}
-
-locals {
-  network_interface_ip_configuration_subnets_flattened = flatten([
-    for key, interface in var.network_interfaces : [
-      for k, configuration in interface.ip_configurations : merge(configuration.subnet, { network_interface = key, ip_configuration = k })
-    ]
-  ])
-
-  network_interface_ip_configuration_subnets = {
-    for subnet in local.network_interface_ip_configuration_subnets_flattened :
-    "${subnet.network_interface}_${subnet.ip_configuration}" => subnet
-  }
-
-  network_interface_ip_configuration_existing_public_ip_addresses_flattened = flatten([
-    for key, interface in var.network_interfaces : [
-      for k, configuration in interface.ip_configurations :
-      merge(configuration.public_ip_address.existing, { network_interface = key, ip_configuration = k })
-      if try(configuration.public_ip_address.existing, null) != null
-    ]
-  ])
-
-  network_interface_ip_configuration_existing_public_ip_addresses = {
-    for address in local.network_interface_ip_configuration_existing_public_ip_addresses_flattened :
-    "${address.network_interface}_${address.ip_configuration}" => address
-  }
-
-  network_interface_ip_configuration_new_public_ip_addresses_flattened = flatten([
-    for key, interface in var.network_interfaces : [
-      for k, configuration in interface.ip_configurations :
-      merge(configuration.public_ip_address.new, { network_interface = key, ip_configuration = k })
-      if try(configuration.public_ip_address.new, null) != null
-    ]
-  ])
-
-  network_interface_ip_configuration_new_public_ip_addresses = {
-    for address in local.network_interface_ip_configuration_new_public_ip_addresses_flattened :
-    "${address.network_interface}_${address.ip_configuration}" => address
-  }
-}
-
-data "azurerm_subnet" "subnets" {
-  for_each = local.network_interface_ip_configuration_subnets
-
-  name                 = each.value.name
-  virtual_network_name = each.value.virtual_network_name
-  resource_group_name  = each.value.subnet_resource_group_name
-}
-
-data "azurerm_public_ip" "existing_public_ip_addresses" {
-  for_each = local.network_interface_ip_configuration_existing_public_ip_addresses
-
-  name                = each.value.name
-  resource_group_name = each.value.resource_group_name
-}
-
-module "new_public_ip_addresses" {
-  for_each = local.network_interface_ip_configuration_new_public_ip_addresses
-  source   = "../public_ip_address"
-
-  name                = each.value.name
-  location            = each.value.location
-  resource_group_name = each.value.resource_group_name
-  allocation_method   = each.value.allocation_method
-  sku                 = each.value.sku
-}
-
-resource "azurerm_network_interface" "network_interfaces" {
-  for_each = var.network_interfaces
-
-  name                = each.value.name
-  location            = each.value.location
-  resource_group_name = each.value.resource_group_name
-
-  dynamic "ip_configuration" {
-    for_each = each.value.ip_configurations
-
-    content {
-      name                          = ip_configuration.value.name
-      subnet_id                     = data.azurerm_subnet.subnets["${each.key}_${ip_configuration.key}"].id
-      private_ip_address_allocation = ip_configuration.value.private_ip_address_allocation
-      # If none of 'existing' or 'new' 'public_ip_address' is given, 'coalesce' will throw an error. 'Try' will catch it and return 'null'.
-      public_ip_address_id = try(coalesce(
-        try(data.azurerm_public_ip.existing_public_ip_addresses["${each.key}_${ip_configuration.key}"].id, ""),
-        try(module.new_public_ip_addresses["${each.key}_${ip_configuration.key}"].id, "")
-      ), null)
-    }
-  }
-}
-
-resource "azurerm_linux_virtual_machine" "linux_virtual_machine" {
+# Manages a Linux Virtual Machine.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine
+# NOTE: Terraform will automatically remove the OS Disk by default - this behaviour can be configured using the features setting within the Provider block.
+# NOTE: All arguments including the administrator login and password will be stored in the raw state as plain-text. Read more about sensitive data in state at https://www.terraform.io/docs/state/sensitive-data.html.
+# NOTE: This resource does not support Unmanaged Disks. If you need to use Unmanaged Disks you can continue to use the azurerm_virtual_machine resource instead.
+# NOTE: This resource does not support attaching existing OS Disks. You can instead capture an image of the OS Disk or continue to use the azurerm_virtual_machine resource instead.
+resource "azurerm_linux_virtual_machine" "vm" {
   name                            = var.name
   location                        = var.location
   resource_group_name             = var.resource_group_name
@@ -105,16 +12,23 @@ resource "azurerm_linux_virtual_machine" "linux_virtual_machine" {
   admin_username                  = var.admin_username
   admin_password                  = var.admin_password
   disable_password_authentication = var.disable_password_authentication
-  custom_data                     = var.custom_data_path
+  custom_data                     = var.custom_data
   network_interface_ids = [
     for key, interface in azurerm_network_interface.network_interfaces : interface.id
   ]
 
+  os_disk {
+    name                 = var.os_disk.name != null ? var.os_disk.name : "${var.name}-os-disk"
+    caching              = var.os_disk.caching
+    storage_account_type = var.os_disk.storage_account_type
+  }
+
   dynamic "identity" {
-    for_each = var.identity != null ? [1] : []
+    for_each = var.identity != null ? [1] : [0]
 
     content {
-      type = var.identity.type
+      type         = var.identity.type
+      identity_ids = try(data.azurerm_user_assigned_identity.user_assigned_identities[*].id, null)
     }
   }
 
@@ -124,17 +38,11 @@ resource "azurerm_linux_virtual_machine" "linux_virtual_machine" {
     content {
       username = var.admin_ssh_key.value.username
       public_key = try(
-        data.azurerm_ssh_public_key.admin_ssh_keys[admin_ssh_key.key].public_key,
-        file(admin_ssh_key.value.public_key.existing_on_local_computer.path),
-        "'Try' could not find any valid 'public_key'"
+        data.azurerm_ssh_public_key.admin_ssh_keys_from_azure[admin_ssh_key.key].public_key,
+        file(admin_ssh_key.value.public_key.from_local_computer.path),
+        "'try' function could not find a valid 'public_key' for the 'admin_ssh_key' of the 'vm': ${var.name}!"
       )
     }
-  }
-
-  os_disk {
-    name                 = var.os_disk.name != null ? var.os_disk.name : "${var.name}-os-disk"
-    caching              = var.os_disk.caching
-    storage_account_type = var.os_disk.storage_account_type
   }
 
   source_image_reference {
@@ -153,31 +61,8 @@ resource "azurerm_linux_virtual_machine" "linux_virtual_machine" {
   }
 }
 
-data "azurerm_network_security_group" "existing_network_security_groups" {
-  for_each = {
-    for key, interface in var.network_interfaces :
-    key => interface.network_security_group.existing
-    if try(interface.network_security_group.existing, null) != null
-  }
-
-  name                = each.value.name
-  resource_group_name = each.value.resource_group_name
-}
-
-module "new_network_security_groups" {
-  for_each = {
-    for key, interface in var.network_interfaces :
-    key => interface.network_security_group.new
-    if try(interface.network_security_group.new, null) != null
-  }
-  source = "../network_security_group"
-
-  name                = each.value.name
-  location            = each.value.location
-  resource_group_name = each.value.resource_group_name
-  security_rules      = each.value.security_rules
-}
-
+# Manages the association between a Network Interface and a Network Security Group.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface_security_group_association
 resource "azurerm_network_interface_security_group_association" "nic_nsg_association" {
   for_each = {
     for key, interface in var.network_interfaces : key => interface
@@ -185,9 +70,9 @@ resource "azurerm_network_interface_security_group_association" "nic_nsg_associa
   }
 
   network_interface_id = azurerm_network_interface.network_interfaces[each.key].id
-  network_security_group_id = coalesce(
-    try(data.azurerm_network_security_group.existing_network_security_groups[each.key].id, ""),
-    try(module.new_network_security_groups[each.key].id, ""),
-    "Coalesce could not find a valid 'network_security_group_id'"
+  network_security_group_id = try(
+    data.azurerm_network_security_group.existing_network_security_groups[each.key].id,
+    module.new_network_security_groups[each.key].id,
+    "'try' function could not find a valid 'network_security_group_id' for the 'nic_nsg_association'!"
   )
 }

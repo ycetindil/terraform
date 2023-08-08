@@ -13,7 +13,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "fwprcgS" {
   for_each = var.firewall_policy_rule_collection_groups
 
   name               = each.value.name
-  firewall_policy_id = each.value.firewall_policy_id
+  firewall_policy_id = azurerm_firewall_policy.fwp.id
   priority           = each.value.priority
 
   dynamic "network_rule_collection" {

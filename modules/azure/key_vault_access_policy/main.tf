@@ -18,6 +18,7 @@ resource "azurerm_key_vault_access_policy" "kvap" {
     data.azuread_user.user[0].object_id,
     data.azuread_group.group[0].object_id,
     data.azuread_service_principal.service_principal[0].object_id,
+    data.azurerm_user_assigned_identity.user_assigned_identity[0].principal_id,
     data.azurerm_linux_web_app.linux_web_app[0].identity[0].principal_id,
     data.azurerm_windows_web_app.windows_web_app[0].identity[0].principal_id,
     "'try' function could not find a valid 'object_id' for the 'key_vault_access_policy'!"

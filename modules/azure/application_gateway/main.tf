@@ -11,6 +11,15 @@ resource "azurerm_application_gateway" "agw" {
     capacity = var.sku.capacity
   }
 
+  dynamic "identity" {
+    for_each = var.identities != null ? [1] : []
+
+    content {
+      type         = "UserAssigned"
+      identity_ids = data.azurerm_user_assigned_identity.user_assigned_identities[*].id
+    }
+  }
+
   dynamic "gateway_ip_configuration" {
     for_each = var.gateway_ip_configurations
 
@@ -20,7 +29,7 @@ resource "azurerm_application_gateway" "agw" {
     }
   }
 
-  dynamic "frontend_ports" {
+  dynamic "frontend_port" {
     for_each = var.frontend_ports
 
     content {
@@ -47,62 +56,45 @@ resource "azurerm_application_gateway" "agw" {
 
     content {
       name = backend_address_pool.value.name
-      fqdns = merge(
+      fqdns = concat(
         [
-          for key, resource in each.value.resources :
+          for key, resource in backend_address_pool.value.resources :
           data.azurerm_linux_web_app.backend_address_pool_lapps["${backend_address_pool.key}_${key}"].default_hostname
           if resource.type == "lapp"
         ],
         [
-          for key, resource in each.value.resources :
+          for key, resource in backend_address_pool.value.resources :
           data.azurerm_windows_web_app.backend_address_pool_wapps["${backend_address_pool.key}_${key}"].default_hostname
           if resource.type == "wapp"
         ],
         [
-          for key, resource in each.value.resources :
+          for key, resource in backend_address_pool.value.resources :
           resource.fqdn
           if resource.type == "fqdn"
         ]
       )
-      ip_addresses = merge(
+      ip_addresses = concat(
         [
-          for key, resource in each.value.resources :
+          for key, resource in backend_address_pool.value.resources :
           data.azurerm_network_interface.backend_address_pool_nics["${backend_address_pool.key}_${key}"].private_ip_address
           if resource.type == "nic"
         ],
         [
-          for key, resource in each.value.resources :
-          data.azurerm_virtual_machine_scale_set.backend_address_pool_vmsses["${backend_address_pool.key}_${key}"].instances.*.private_ip_address
+          for key, resource in backend_address_pool.value.resources :
+          data.azurerm_virtual_machine_scale_set.backend_address_pool_vmsses["${backend_address_pool.key}_${key}"].instances[*].private_ip_address
           if resource.type == "vmss"
         ],
         [
-          for key, resource in each.value.resources :
+          for key, resource in backend_address_pool.value.resources :
           data.azurerm_public_ip_address.backend_address_pool_pips["${backend_address_pool.key}_${key}"].ip_address
           if resource.type == "pip"
         ],
         [
-          for key, resource in each.value.resources :
+          for key, resource in backend_address_pool.value.resources :
           resource.ip
           if resource.type == "ip"
         ]
       )
-    }
-  }
-
-  dynamic "backend_http_settings" {
-    for_each = var.backend_http_settingses
-
-    content {
-      name                                = backend_http_settings.value.name
-      cookie_based_affinity               = backend_http_settings.value.cookie_based_affinity
-      port                                = backend_http_settings.value.port
-      protocol                            = backend_http_settings.value.protocol
-      affinity_cookie_name                = backend_http_settings.value.affinity_cookie_name
-      path                                = backend_http_settings.value.path
-      probe_name                          = backend_http_settings.value.probe_name
-      request_timeout                     = backend_http_settings.value.request_timeout
-      host_name                           = backend_http_settings.value.host_name
-      pick_host_name_from_backend_address = backend_http_settings.value.pick_host_name_from_backend_address
     }
   }
 
@@ -120,6 +112,23 @@ resource "azurerm_application_gateway" "agw" {
       port                                      = probe.value.port
       pick_host_name_from_backend_http_settings = probe.value.pick_host_name_from_backend_http_settings
       minimum_servers                           = probe.value.minimum_servers
+    }
+  }
+
+  dynamic "backend_http_settings" {
+    for_each = var.backend_http_settingses
+
+    content {
+      name                                = backend_http_settings.value.name
+      cookie_based_affinity               = backend_http_settings.value.cookie_based_affinity
+      port                                = backend_http_settings.value.port
+      protocol                            = backend_http_settings.value.protocol
+      affinity_cookie_name                = backend_http_settings.value.affinity_cookie_name
+      path                                = backend_http_settings.value.path
+      probe_name                          = backend_http_settings.value.probe_name
+      request_timeout                     = backend_http_settings.value.request_timeout
+      host_name                           = backend_http_settings.value.host_name
+      pick_host_name_from_backend_address = backend_http_settings.value.pick_host_name_from_backend_address
     }
   }
 

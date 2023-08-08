@@ -42,7 +42,8 @@ variable "tags" {
 
 variable "key_vault_secrets" {
   description = <<EOD
-    (Required) A map of zero or more ?????? blocks supports the following:
+    (Optional) Created by azurerm_key_vault_secret subresource.
+    A map of zero or more key_vault_secret blocks supports the following:
     - name - (Required) Specifies the name of the Key Vault Secret.
       Changing this forces a new resource to be created.
     - value - (Required) Specifies the value of the Key Vault Secret.
