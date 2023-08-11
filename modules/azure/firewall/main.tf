@@ -2,8 +2,8 @@
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall
 resource "azurerm_firewall" "fw" {
   name                = var.name
-  location            = var.location
   resource_group_name = var.resource_group_name
+  location            = var.location
   sku_name            = var.sku_name
   sku_tier            = var.sku_tier
   firewall_policy_id  = try(data.azurerm_firewall_policy.firewall_policy[0].id, null)

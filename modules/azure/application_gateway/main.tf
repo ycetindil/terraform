@@ -2,54 +2,8 @@
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway
 resource "azurerm_application_gateway" "agw" {
   name                = var.name
-  location            = var.location
   resource_group_name = var.resource_group_name
-
-  sku {
-    name     = var.sku.name
-    tier     = var.sku.tier
-    capacity = var.sku.capacity
-  }
-
-  dynamic "identity" {
-    for_each = var.identities != null ? [1] : []
-
-    content {
-      type         = "UserAssigned"
-      identity_ids = data.azurerm_user_assigned_identity.user_assigned_identities[*].id
-    }
-  }
-
-  dynamic "gateway_ip_configuration" {
-    for_each = var.gateway_ip_configurations
-
-    content {
-      name      = gateway_ip_configuration.value.name
-      subnet_id = data.azurerm_subnet.gateway_ip_configuration_subnets[gateway_ip_configuration.key].id
-    }
-  }
-
-  dynamic "frontend_port" {
-    for_each = var.frontend_ports
-
-    content {
-      name = frontend_port.value.name
-      port = frontend_port.value.port
-    }
-  }
-
-  dynamic "frontend_ip_configuration" {
-    for_each = var.frontend_ip_configurations
-
-    content {
-      name                            = frontend_ip_configuration.value.name
-      subnet_id                       = try(data.azurerm_subnet.frontend_ip_configuration_subnets[frontend_ip_configuration.key].id, null)
-      private_ip_address              = frontend_ip_configuration.value.private_ip_address
-      public_ip_address_id            = try(data.azurerm_public_ip.frontend_ip_configuration_public_ips[frontend_ip_configuration.key].id, null)
-      private_ip_address_allocation   = frontend_ip_configuration.value.private_ip_address_allocation
-      private_link_configuration_name = frontend_ip_configuration.value.private_link_configuration_name
-    }
-  }
+  location            = var.location
 
   dynamic "backend_address_pool" {
     for_each = var.backend_address_pools
@@ -98,23 +52,6 @@ resource "azurerm_application_gateway" "agw" {
     }
   }
 
-  dynamic "probe" {
-    for_each = var.probes
-
-    content {
-      name                                      = probe.value.name
-      host                                      = probe.value.host
-      interval                                  = probe.value.interval
-      protocol                                  = probe.value.protocol
-      path                                      = probe.value.path
-      timeout                                   = probe.value.timeout
-      unhealthy_threshold                       = probe.value.unhealthy_threshold
-      port                                      = probe.value.port
-      pick_host_name_from_backend_http_settings = probe.value.pick_host_name_from_backend_http_settings
-      minimum_servers                           = probe.value.minimum_servers
-    }
-  }
-
   dynamic "backend_http_settings" {
     for_each = var.backend_http_settingses
 
@@ -129,6 +66,37 @@ resource "azurerm_application_gateway" "agw" {
       request_timeout                     = backend_http_settings.value.request_timeout
       host_name                           = backend_http_settings.value.host_name
       pick_host_name_from_backend_address = backend_http_settings.value.pick_host_name_from_backend_address
+    }
+  }
+
+  dynamic "frontend_ip_configuration" {
+    for_each = var.frontend_ip_configurations
+
+    content {
+      name                            = frontend_ip_configuration.value.name
+      subnet_id                       = try(data.azurerm_subnet.frontend_ip_configuration_subnets[frontend_ip_configuration.key].id, null)
+      private_ip_address              = frontend_ip_configuration.value.private_ip_address
+      public_ip_address_id            = try(data.azurerm_public_ip.frontend_ip_configuration_public_ips[frontend_ip_configuration.key].id, null)
+      private_ip_address_allocation   = frontend_ip_configuration.value.private_ip_address_allocation
+      private_link_configuration_name = frontend_ip_configuration.value.private_link_configuration_name
+    }
+  }
+
+  dynamic "frontend_port" {
+    for_each = var.frontend_ports
+
+    content {
+      name = frontend_port.value.name
+      port = frontend_port.value.port
+    }
+  }
+
+  dynamic "gateway_ip_configuration" {
+    for_each = var.gateway_ip_configurations
+
+    content {
+      name      = gateway_ip_configuration.value.name
+      subnet_id = data.azurerm_subnet.gateway_ip_configuration_subnets[gateway_ip_configuration.key].id
     }
   }
 
@@ -149,6 +117,21 @@ resource "azurerm_application_gateway" "agw" {
     }
   }
 
+  dynamic "identity" {
+    for_each = var.identities != null ? [1] : []
+
+    content {
+      type         = "UserAssigned"
+      identity_ids = data.azurerm_user_assigned_identity.identity_user_assigned_identities[*].id
+    }
+  }
+
+  sku {
+    name     = var.sku.name
+    tier     = var.sku.tier
+    capacity = var.sku.capacity
+  }
+
   dynamic "request_routing_rule" {
     for_each = var.request_routing_rules
 
@@ -162,6 +145,34 @@ resource "azurerm_application_gateway" "agw" {
       rewrite_rule_set_name       = request_routing_rule.value.rewrite_rule_set_name
       url_path_map_name           = request_routing_rule.value.url_path_map_name
       priority                    = request_routing_rule.value.priority
+    }
+  }
+
+  dynamic "probe" {
+    for_each = var.probes
+
+    content {
+      name                                      = probe.value.name
+      host                                      = probe.value.host
+      interval                                  = probe.value.interval
+      protocol                                  = probe.value.protocol
+      path                                      = probe.value.path
+      timeout                                   = probe.value.timeout
+      unhealthy_threshold                       = probe.value.unhealthy_threshold
+      port                                      = probe.value.port
+      pick_host_name_from_backend_http_settings = probe.value.pick_host_name_from_backend_http_settings
+      minimum_servers                           = probe.value.minimum_servers
+    }
+  }
+
+  dynamic "ssl_certificate" {
+    for_each = var.ssl_certificates
+
+    content {
+      name                = ssl_certificate.value.name
+      data                = ssl_certificate.value.data
+      password            = ssl_certificate.value.password
+      key_vault_secret_id = data.azurerm_key_vault_certificate.ssl_certificate_key_vault_certificates[ssl_certificate.key].id
     }
   }
 
@@ -185,7 +196,7 @@ resource "azurerm_application_gateway" "agw" {
           backend_http_settings_name  = path_rule.value.backend_http_settings_name
           redirect_configuration_name = path_rule.value.redirect_configuration_name
           rewrite_rule_set_name       = path_rule.value.rewrite_rule_set_name
-          firewall_policy_id          = path_rule.value.firewall_policy_id
+          firewall_policy_id          = data.azurerm_firewall_policy.url_path_map_firewall_policies["${url_path_map.key}_${path_rule.key}"].id
         }
       }
     }

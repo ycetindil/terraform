@@ -6,14 +6,6 @@ variable "name" {
   type        = string
 }
 
-variable "location" {
-  description = <<EOD
-    (Required) The Azure region where the Application Gateway should exist.
-    Changing this forces a new resource to be created.
-  EOD
-  type        = string
-}
-
 variable "resource_group_name" {
   description = <<EOD
     (Required) The name of the resource group in which to the Application Gateway should exist.
@@ -22,70 +14,76 @@ variable "resource_group_name" {
   type        = string
 }
 
-variable "sku" {
+variable "location" {
   description = <<EOD
-    (Required) A sku block as defined below.
-    A sku block supports the following:
-    - name - (Required) The Name of the SKU to use for this Application Gateway.
-      Possible values are Standard_Small, Standard_Medium, Standard_Large, Standard_v2, WAF_Medium, WAF_Large, and WAF_v2.
-    - tier - (Required) The Tier of the SKU to use for this Application Gateway.
-      Possible values are Standard, Standard_v2, WAF and WAF_v2.
-    - capacity - (Optional) The Capacity of the SKU to use for this Application Gateway.
-      When using a V1 SKU this value must be between 1 and 32, and 1 to 125 for a V2 SKU.
-      This property is optional if autoscale_configuration is set.
+    (Required) The Azure region where the Application Gateway should exist.
+    Changing this forces a new resource to be created.
   EOD
-  type = object({
-    name     = string
-    tier     = string
-    capacity = optional(number, null)
-  })
+  type        = string
 }
 
-variable "identity" {
-  description = <<EOD
-    (Optional) An identity block as defined below.
-    An identity block supports the following:
-    - type - (Required) Specifies the type of Managed Service Identity that should be configured on this Application Gateway.
-      Only possible value is UserAssigned.
-    - user_assigned_identities - (Required) Specifies a list of existing User Assigned Managed Identities to be assigned to this Application Gateway.
-  EOD
-  default     = null
-  type = object({
-    type = string
-    user_assigned_identities = list(object({
-      name                = string
-      resource_group_name = string
-    }))
-  })
-}
-
-variable "gateway_ip_configurations" {
-  description = <<EOD
-    (Required) (Required) One or more gateway_ip_configuration blocks as defined below.
-    A gateway_ip_configuration block supports the following:
-    - name - (Required) The Name of this Gateway IP Configuration.
-    - subnet - (Required) The existing Subnet which the Application Gateway should be connected to.
-  EOD
+variable "backend_address_pools" {
+  description = <<EOT
+    (Required) One or more backend_address_pool blocks as defined below.
+    A backend_address_pool block supports the following:
+    - name - (Required) The name of the Backend Address Pool.
+    - resources - (Optional) A map of existing resources supports the following:
+      - type - (Required) - The type of the resource.
+        Possible values are nic for network interface card, vmss for virtual machine scale set, pip for public IP address, ip for internal IP address, fqdn for fully qualified domain name, lapp for linux app service, and wapp for windows app service.
+      - name - (Optional) The name of the resource.
+        Required if resource type is one of: nic, vmss, pip, lapp, or wapp.
+      - resource_group_name - (Optional) The name of the resource group of the resource.
+        Required if resource type is one of: nic, vmss, pip, lapp, or wapp.
+      - ip - (Optional) An IP as the resource.
+        Required if resource type is ip.
+      - fqdn - (Optional) An FQDN as the resource.
+        Required if resource type is fqdn.
+  EOT
   type = map(object({
     name = string
-    subnet = object({
-      name                       = string
-      virtual_network_name       = string
-      subnet_resource_group_name = string
-    })
+    resources = optional(map(object({
+      type                = string
+      name                = optional(string, null)
+      resource_group_name = optional(string, null)
+      ip                  = optional(string, null)
+      fqdn                = optional(string, null)
+    })), {})
   }))
 }
 
-variable "frontend_ports" {
+variable "backend_http_settingses" {
   description = <<EOD
-    (Required) One or more frontend_port blocks as defined below.
-    A frontend_port block supports the following:
-    - name - (Required) The name of the Frontend Port.
-    - port - (Required) The port used for this Frontend Port.
+    (Required) One or more backend_http_settings blocks as defined below.
+    A backend_http_settings block supports the following:
+    - name - (Required) The name of the Backend HTTP Settings Collection.
+    - cookie_based_affinity - (Required) Is Cookie-Based Affinity enabled?
+      Possible values are Enabled and Disabled.
+    - port - (Required) The port which should be used for this Backend HTTP Settings Collection.
+    - protocol - (Required) The Protocol which should be used.
+      Possible values are Http and Https.
+    - affinity_cookie_name - (Optional) The name of the affinity cookie.
+    - path - (Optional) The Path which should be used as a prefix for all HTTP requests.
+    - probe_name - (Optional) The name of an associated HTTP Probe.
+    - request_timeout - (Optional) The request timeout in seconds, which must be between 1 and 86400 seconds.
+      Defaults to 30.
+    - host_name - (Optional) Host header to be sent to the backend servers.
+      Cannot be set if pick_host_name_from_backend_address is set to true.
+    - pick_host_name_from_backend_address - (Optional) Whether host header should be picked from the host name of the backend server.
+      Defaults to false.
+    - trusted_root_certificate_names - (Optional) A list of trusted_root_certificate names.
   EOD
   type = map(object({
-    name = string
-    port = number
+    name                                = string
+    cookie_based_affinity               = string
+    port                                = number
+    protocol                            = string
+    affinity_cookie_name                = optional(string, null)
+    path                                = optional(string, null)
+    probe_name                          = optional(string, null)
+    request_timeout                     = optional(number, null)
+    host_name                           = optional(string, null)
+    pick_host_name_from_backend_address = optional(bool, null)
+    trusted_root_certificate_names      = optional(list(string), null)
   }))
 }
 
@@ -119,32 +117,138 @@ variable "frontend_ip_configurations" {
   }))
 }
 
-variable "backend_address_pools" {
-  description = <<EOT
-    (Required) One or more backend_address_pool blocks as defined below.
-    A backend_address_pool block supports the following:
-    - name - (Required) The name of the Backend Address Pool.
-    - resources - (Optional) A map of existing resources supports the following:
-      - type - (Required) - The type of the resource.
-        Possible values are nic for network interface card, vmss for virtual machine scale set, pip for public IP address, ip for internal IP address, fqdn for fully qualified domain name, lapp for linux app service, and wapp for windows app service.
-      - name - (Optional) The name of the resource.
-        Required if resource type is one of: nic, vmss, pip, lapp, or wapp.
-      - resource_group_name - (Optional) The name of the resource group of the resource.
-        Required if resource type is one of: nic, vmss, pip, lapp, or wapp.
-      - ip - (Optional) An IP as the resource.
-        Required if resource type is ip.
-      - fqdn - (Optional) An FQDN as the resource.
-        Required if resource type is fqdn.
-  EOT
+variable "frontend_ports" {
+  description = <<EOD
+    (Required) One or more frontend_port blocks as defined below.
+    A frontend_port block supports the following:
+    - name - (Required) The name of the Frontend Port.
+    - port - (Required) The port used for this Frontend Port.
+  EOD
   type = map(object({
     name = string
-    resources = optional(map(object({
-      type                = string
-      name                = optional(string)
-      resource_group_name = optional(string)
-      ip                  = optional(string)
-      fqdn                = optional(string)
-    })), {})
+    port = number
+  }))
+}
+
+variable "gateway_ip_configurations" {
+  description = <<EOD
+    (Required) (Required) One or more gateway_ip_configuration blocks as defined below.
+    A gateway_ip_configuration block supports the following:
+    - name - (Required) The Name of this Gateway IP Configuration.
+    - subnet - (Required) The existing Subnet which the Application Gateway should be connected to.
+  EOD
+  type = map(object({
+    name = string
+    subnet = object({
+      name                       = string
+      virtual_network_name       = string
+      subnet_resource_group_name = string
+    })
+  }))
+}
+
+variable "http_listeners" {
+  description = <<EOD
+    (Required) One or more http_listener blocks as defined below.
+    A http_listener block supports the following:
+    - name - (Required) The Name of the HTTP Listener.
+    - frontend_ip_configuration_name - (Required) The Name of the Frontend IP Configuration used for this HTTP Listener.
+    - frontend_port_name - (Required) The Name of the Frontend Port use for this HTTP Listener.
+    - host_name - (Optional) The Hostname which should be used for this HTTP Listener.
+      Setting this value changes Listener Type to 'Multi site'.
+    - host_names - (Optional) A list of Hostname(s) should be used for this HTTP Listener.
+      It allows special wildcard characters.
+    NOTE: The host_names and host_name are mutually exclusive and cannot both be set.
+    - protocol - (Required) The Protocol to use for this HTTP Listener.
+      Possible values are Http and Https.
+    - require_sni - (Optional) Should Server Name Indication be Required?
+      Defaults to false.
+    - ssl_certificate_name - (Optional) The name of the associated SSL Certificate which should be used for this HTTP Listener.
+    - firewall_policy_id - (Optional) The ID of the Web Application Firewall Policy which should be used for this HTTP Listener.
+    - ssl_profile_name - (Optional) The name of the associated SSL Profile which should be used for this HTTP Listener.
+  EOD
+  type = map(object({
+    name                           = string
+    frontend_ip_configuration_name = string
+    frontend_port_name             = string
+    host_name                      = optional(string, null)
+    host_names                     = optional(list(string), null)
+    protocol                       = string
+    require_sni                    = optional(bool, null)
+    ssl_certificate_name           = optional(string, null)
+    firewall_policy_id             = optional(string, null)
+    ssl_profile_name               = optional(string, null)
+  }))
+}
+
+variable "identity" {
+  description = <<EOD
+    (Optional) An identity block as defined below.
+    An identity block supports the following:
+    - type - (Required) Specifies the type of Managed Service Identity that should be configured on this Application Gateway.
+      Only possible value is UserAssigned.
+    - user_assigned_identities - (Required) Specifies a list of existing User Assigned Managed Identities to be assigned to this Application Gateway.
+  EOD
+  default     = null
+  type = object({
+    type = string
+    user_assigned_identities = list(object({
+      name                = string
+      resource_group_name = string
+    }))
+  })
+}
+
+variable "sku" {
+  description = <<EOD
+    (Required) A sku block as defined below.
+    A sku block supports the following:
+    - name - (Required) The Name of the SKU to use for this Application Gateway.
+      Possible values are Standard_Small, Standard_Medium, Standard_Large, Standard_v2, WAF_Medium, WAF_Large, and WAF_v2.
+    - tier - (Required) The Tier of the SKU to use for this Application Gateway.
+      Possible values are Standard, Standard_v2, WAF and WAF_v2.
+    - capacity - (Optional) The Capacity of the SKU to use for this Application Gateway.
+      When using a V1 SKU this value must be between 1 and 32, and 1 to 125 for a V2 SKU.
+      This property is optional if autoscale_configuration is set.
+  EOD
+  type = object({
+    name     = string
+    tier     = string
+    capacity = optional(number, null)
+  })
+}
+
+variable "request_routing_rules" {
+  description = <<EOD
+    (Required) One or more request_routing_rule blocks as defined below.
+    A request_routing_rule block supports the following:
+    - name - (Required) The Name of this Request Routing Rule.
+    - rule_type - (Required) The Type of Routing that should be used for this Rule.
+      Possible values are Basic and PathBasedRouting.
+    - http_listener_name - (Required) The Name of the HTTP Listener which should be used for this Routing Rule.
+    - backend_address_pool_name - (Optional) The Name of the Backend Address Pool which should be used for this Routing Rule.
+      Cannot be set if redirect_configuration_name is set.
+    - backend_http_settings_name - (Optional) The Name of the Backend HTTP Settings Collection which should be used for this Routing Rule.
+      Cannot be set if redirect_configuration_name is set.
+    - redirect_configuration_name - (Optional) The Name of the Redirect Configuration which should be used for this Routing Rule.
+      Cannot be set if either backend_address_pool_name or backend_http_settings_name is set.
+    - rewrite_rule_set_name - (Optional) The Name of the Rewrite Rule Set which should be used for this Routing Rule.
+      Only valid for v2 SKUs.
+    NOTE: backend_address_pool_name, backend_http_settings_name, redirect_configuration_name, and rewrite_rule_set_name are applicable only when rule_type is Basic.
+    - url_path_map_name - (Optional) The Name of the URL Path Map which should be associated with this Routing Rule.
+    - priority - (Optional) Rule evaluation order can be dictated by specifying an integer value from 1 to 20000 with 1 being the highest priority and 20000 being the lowest priority.
+      NOTE: priority is required when sku.0.tier is set to *_v2.
+  EOD
+  type = map(object({
+    name                        = string
+    rule_type                   = string
+    http_listener_name          = string
+    backend_address_pool_name   = optional(string, null)
+    backend_http_settings_name  = optional(string, null)
+    redirect_configuration_name = optional(string, null)
+    rewrite_rule_set_name       = optional(string, null)
+    url_path_map_name           = optional(string, null)
+    priority                    = optional(number, null)
   }))
 }
 
@@ -189,107 +293,31 @@ variable "probes" {
   }))
 }
 
-variable "backend_http_settingses" {
+variable "ssl_certificates" {
   description = <<EOD
-    (Required) One or more backend_http_settings blocks as defined below.
-    A backend_http_settings block supports the following:
-    - name - (Required) The name of the Backend HTTP Settings Collection.
-    - cookie_based_affinity - (Required) Is Cookie-Based Affinity enabled?
-      Possible values are Enabled and Disabled.
-    - port - (Required) The port which should be used for this Backend HTTP Settings Collection.
-    - protocol - (Required) The Protocol which should be used.
-      Possible values are Http and Https.
-    - affinity_cookie_name - (Optional) The name of the affinity cookie.
-    - path - (Optional) The Path which should be used as a prefix for all HTTP requests.
-    - probe_name - (Optional) The name of an associated HTTP Probe.
-    - request_timeout - (Optional) The request timeout in seconds, which must be between 1 and 86400 seconds.
-      Defaults to 30.
-    - host_name - (Optional) Host header to be sent to the backend servers.
-      Cannot be set if pick_host_name_from_backend_address is set to true.
-    - pick_host_name_from_backend_address - (Optional) Whether host header should be picked from the host name of the backend server.
-      Defaults to false.
-    - trusted_root_certificate_names - (Optional) A list of trusted_root_certificate names.
+    (Optional) One or more ssl_certificate blocks as defined below.
+    A ssl_certificate block supports the following:
+    - name - (Required) The Name of the SSL certificate that is unique within this Application Gateway
+    - data - (Optional) The base64-encoded PFX certificate data. Required if key_vault_secret_id is not set.
+      NOTE: When specifying a file, use data = filebase64("path/to/file") to encode the contents of that file.
+    - password - (Optional) Password for the pfx file specified in data. Required if data is set.
+    - key_vault_secret_id - (Optional) Secret Id of (base-64 encoded unencrypted pfx) Secret or Certificate object stored in Azure KeyVault.
+      IMPORTANT: Obtained by the module by passing the key_vault_secret information block as below.
+      You need to enable soft delete for keyvault to use this feature.
+      Required if data is not set.
+      NOTE: TLS termination with Key Vault certificates is limited to the v2 SKUs.
+      NOTE: For TLS termination with Key Vault certificates to work properly existing user-assigned managed identity, which Application Gateway uses to retrieve certificates from Key Vault, should be defined via identity block. Additionally, access policies in the Key Vault to allow the identity to be granted get access to the secret should be defined.
   EOD
+  default     = {}
   type = map(object({
-    name                                = string
-    cookie_based_affinity               = string
-    port                                = number
-    protocol                            = string
-    affinity_cookie_name                = optional(string, null)
-    path                                = optional(string, null)
-    probe_name                          = optional(string, null)
-    request_timeout                     = optional(number, null)
-    host_name                           = optional(string, null)
-    pick_host_name_from_backend_address = optional(bool, null)
-    trusted_root_certificate_names      = optional(list(string), null)
-  }))
-}
-
-variable "http_listeners" {
-  description = <<EOD
-    (Required) One or more http_listener blocks as defined below.
-    A http_listener block supports the following:
-    - name - (Required) The Name of the HTTP Listener.
-    - frontend_ip_configuration_name - (Required) The Name of the Frontend IP Configuration used for this HTTP Listener.
-    - frontend_port_name - (Required) The Name of the Frontend Port use for this HTTP Listener.
-    - host_name - (Optional) The Hostname which should be used for this HTTP Listener.
-      Setting this value changes Listener Type to 'Multi site'.
-    - host_names - (Optional) A list of Hostname(s) should be used for this HTTP Listener.
-      It allows special wildcard characters.
-    NOTE: The host_names and host_name are mutually exclusive and cannot both be set.
-    - protocol - (Required) The Protocol to use for this HTTP Listener.
-      Possible values are Http and Https.
-    - require_sni - (Optional) Should Server Name Indication be Required?
-      Defaults to false.
-    - ssl_certificate_name - (Optional) The name of the associated SSL Certificate which should be used for this HTTP Listener.
-    - firewall_policy_id - (Optional) The ID of the Web Application Firewall Policy which should be used for this HTTP Listener.
-    - ssl_profile_name - (Optional) The name of the associated SSL Profile which should be used for this HTTP Listener.
-  EOD
-  type = map(object({
-    name                           = string
-    frontend_ip_configuration_name = string
-    frontend_port_name             = string
-    host_name                      = optional(string, null)
-    host_names                     = optional(list(string), null)
-    protocol                       = string
-    require_sni                    = optional(bool, null)
-    ssl_certificate_name           = optional(string, null)
-    firewall_policy_id             = optional(string, null)
-    ssl_profile_name               = optional(string, null)
-  }))
-}
-
-variable "request_routing_rules" {
-  description = <<EOD
-    (Required) One or more request_routing_rule blocks as defined below.
-    A request_routing_rule block supports the following:
-    - name - (Required) The Name of this Request Routing Rule.
-    - rule_type - (Required) The Type of Routing that should be used for this Rule.
-      Possible values are Basic and PathBasedRouting.
-    - http_listener_name - (Required) The Name of the HTTP Listener which should be used for this Routing Rule.
-    - backend_address_pool_name - (Optional) The Name of the Backend Address Pool which should be used for this Routing Rule.
-      Cannot be set if redirect_configuration_name is set.
-    - backend_http_settings_name - (Optional) The Name of the Backend HTTP Settings Collection which should be used for this Routing Rule.
-      Cannot be set if redirect_configuration_name is set.
-    - redirect_configuration_name - (Optional) The Name of the Redirect Configuration which should be used for this Routing Rule.
-      Cannot be set if either backend_address_pool_name or backend_http_settings_name is set.
-    - rewrite_rule_set_name - (Optional) The Name of the Rewrite Rule Set which should be used for this Routing Rule.
-      Only valid for v2 SKUs.
-    NOTE: backend_address_pool_name, backend_http_settings_name, redirect_configuration_name, and rewrite_rule_set_name are applicable only when rule_type is Basic.
-    - url_path_map_name - (Optional) The Name of the URL Path Map which should be associated with this Routing Rule.
-    - priority - (Optional) Rule evaluation order can be dictated by specifying an integer value from 1 to 20000 with 1 being the highest priority and 20000 being the lowest priority.
-      NOTE: priority is required when sku.0.tier is set to *_v2.
-  EOD
-  type = map(object({
-    name                        = string
-    rule_type                   = string
-    http_listener_name          = string
-    backend_address_pool_name   = optional(string, null)
-    backend_http_settings_name  = optional(string, null)
-    redirect_configuration_name = optional(string, null)
-    rewrite_rule_set_name       = optional(string, null)
-    url_path_map_name           = optional(string, null)
-    priority                    = optional(number, null)
+    name     = string
+    data     = optional(string, null)
+    password = optional(string, null)
+    key_vault_secret = optional(object({
+      name                          = string
+      key_vault_name                = string
+      key_vault_resource_group_name = string
+    }), null)
   }))
 }
 
@@ -306,7 +334,8 @@ variable "url_path_maps" {
       Cannot be set if either default_backend_address_pool_name or default_backend_http_settings_name is set.
     NOTE: Both default_backend_address_pool_name and default_backend_http_settings_name or default_redirect_configuration_name should be specified.
     - default_rewrite_rule_set_name - (Optional) The Name of the Default Rewrite Rule Set which should be used for this URL Path Map. Only valid for v2 SKUs.
-    - path_rules - (Required) A map of one or more path_rule blocks supports the following:
+    - path_rules - (Required) One or more path_rule blocks as defined below.
+      A path_rule block supports the following:
       - name - (Required) The Name of the Path Rule.
       - paths - (Required) A list of Paths used in this Path Rule.
       - backend_address_pool_name - (Optional) The Name of the Backend Address Pool to use for this Path Rule.
@@ -318,22 +347,26 @@ variable "url_path_maps" {
       - rewrite_rule_set_name - (Optional) The Name of the Rewrite Rule Set which should be used for this URL Path Map.
         Only valid for v2 SKUs.
       - firewall_policy_id - (Optional) The ID of the Web Application Firewall Policy which should be used as a HTTP Listener.
+        IMPORTANT: Obtained by the module by passing the firewall_policy information block as below.
   EOD
   default     = {}
   type = map(object({
     name                                = string
-    default_backend_address_pool_name   = optional(string)
-    default_backend_http_settings_name  = optional(string)
-    default_redirect_configuration_name = optional(string)
-    default_rewrite_rule_set_name       = optional(string)
+    default_backend_address_pool_name   = optional(string, null)
+    default_backend_http_settings_name  = optional(string, null)
+    default_redirect_configuration_name = optional(string, null)
+    default_rewrite_rule_set_name       = optional(string, null)
     path_rules = map(object({
       name                        = string
       paths                       = list(string)
-      backend_address_pool_name   = optional(string)
-      backend_http_settings_name  = optional(string)
-      redirect_configuration_name = optional(string)
-      rewrite_rule_set_name       = optional(string)
-      firewall_policy_id          = optional(string)
+      backend_address_pool_name   = optional(string, null)
+      backend_http_settings_name  = optional(string, null)
+      redirect_configuration_name = optional(string, null)
+      rewrite_rule_set_name       = optional(string, null)
+      firewall_policy = optional(object({
+        name                = string
+        resource_group_name = string
+      }), null)
     }))
   }))
 }

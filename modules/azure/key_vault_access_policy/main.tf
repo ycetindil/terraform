@@ -26,6 +26,7 @@ resource "azurerm_key_vault_access_policy" "kvap" {
   certificate_permissions = var.certificate_permissions
   key_permissions         = var.key_permissions
   secret_permissions      = var.secret_permissions
+  storage_permissions     = var.storage_permissions
 
   lifecycle {
     ignore_changes = [

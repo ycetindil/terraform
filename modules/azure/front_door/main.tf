@@ -8,14 +8,16 @@ resource "azurerm_cdn_frontdoor_profile" "afdp" {
 }
 
 # Manages a Front Door (standard/premium) Custom Domain.
+# IMPORTANT: If you are using Terraform to manage your DNS Auth and DNS CNAME records for your Custom Domain you will need to add configuration blocks for both the azurerm_dns_txt_record(see the Example DNS Auth TXT Record Usage below) and the azurerm_dns_cname_record(see the Example CNAME Record Usage below) to your configuration file.
+# IMPORTANT: You must include the depends_on meta-argument which references both the azurerm_cdn_frontdoor_route and the azurerm_cdn_frontdoor_security_policy that are associated with your Custom Domain. The reason for these depends_on meta-arguments is because all of the resources for the Custom Domain need to be associated within Front Door before the CNAME record can be written to the domains DNS, else the CNAME validation will fail and Front Door will not enable traffic to the Domain.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_custom_domain
 resource "azurerm_cdn_frontdoor_custom_domain" "afdcdS" {
   for_each = var.cdn_frontdoor_custom_domains
 
   name                     = each.value.name
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.afdp.id
-  dns_zone_id              = try(data.azurerm_dns_zone.cdn_frontdoor_custom_domain_dns_zones[each.key].id, null)
   host_name                = each.value.host_name
+  dns_zone_id              = try(data.azurerm_dns_zone.cdn_frontdoor_custom_domain_dns_zones[each.key].id, null)
 
   tls {
     certificate_type        = each.value.tls.certificate_type
@@ -33,6 +35,7 @@ resource "azurerm_cdn_frontdoor_endpoint" "afdepS" {
 
   name                     = each.value.name
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.afdp.id
+  tags                     = each.value.tags
 }
 
 # Manages a Front Door (standard/premium) Origin Group.
@@ -40,10 +43,8 @@ resource "azurerm_cdn_frontdoor_endpoint" "afdepS" {
 resource "azurerm_cdn_frontdoor_origin_group" "afdogS" {
   for_each = var.cdn_frontdoor_origin_groups
 
-  name                                                      = each.value.name
-  cdn_frontdoor_profile_id                                  = azurerm_cdn_frontdoor_profile.afdp.id
-  session_affinity_enabled                                  = each.value.session_affinity_enabled
-  restore_traffic_time_to_healed_or_new_endpoint_in_minutes = each.value.restore_traffic_time_to_healed_or_new_endpoint_in_minutes
+  name                     = each.value.name
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.afdp.id
 
   load_balancing {
     additional_latency_in_milliseconds = each.value.load_balancing.additional_latency_in_milliseconds
@@ -62,6 +63,9 @@ resource "azurerm_cdn_frontdoor_origin_group" "afdogS" {
     }
   }
 
+  restore_traffic_time_to_healed_or_new_endpoint_in_minutes = each.value.restore_traffic_time_to_healed_or_new_endpoint_in_minutes
+  session_affinity_enabled                                  = each.value.session_affinity_enabled
+
   depends_on = [azurerm_cdn_frontdoor_profile.afdp]
 }
 
@@ -71,10 +75,8 @@ resource "azurerm_cdn_frontdoor_origin_group" "afdogS" {
 resource "azurerm_cdn_frontdoor_origin" "afdoS" {
   for_each = var.cdn_frontdoor_origins
 
-  name                           = each.value.name
-  cdn_frontdoor_origin_group_id  = azurerm_cdn_frontdoor_origin_group.afdogS[each.value.cdn_frontdoor_origin_group].id
-  enabled                        = each.value.enabled
-  certificate_name_check_enabled = each.value.certificate_name_check_enabled
+  name                          = each.value.name
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.afdogS[each.value.cdn_frontdoor_origin_group].id
   # Host is either a 'load_balancer', or a 'storage_blob', or an 'app_service'
   host_name = try(
     data.azurerm_lb.cdn_frontdoor_origin_load_balancers[each.key].private_ip_address,
@@ -82,11 +84,13 @@ resource "azurerm_cdn_frontdoor_origin" "afdoS" {
     data.azurerm_linux_web_app.cdn_frontdoor_origin_app_services[each.key].default_hostname,
     "'try' function could not find a valid 'host_name' for the 'cdn_frontdoor_origin': ${each.value.name}!"
   )
-  http_port          = each.value.http_port
-  https_port         = each.value.https_port
-  origin_host_header = each.value.origin_host_header
-  priority           = each.value.priority
-  weight             = each.value.weight
+  certificate_name_check_enabled = each.value.certificate_name_check_enabled
+  enabled                        = each.value.enabled
+  http_port                      = each.value.http_port
+  https_port                     = each.value.https_port
+  origin_host_header             = each.value.origin_host_header
+  priority                       = each.value.priority
+  weight                         = each.value.weight
 
   dynamic "private_link" {
     for_each = each.value.private_link != null ? [1] : []
@@ -94,12 +98,9 @@ resource "azurerm_cdn_frontdoor_origin" "afdoS" {
     content {
       request_message = each.value.private_link.request_message
       location        = each.value.private_link.location
-      # Target is either a 'private_link_service', or a 'load_balancer', or a 'storage_blob', or an 'app_service'
+      # Target is a 'private_link_service'
       private_link_target_id = try(
         data.azurerm_private_link_service.cdn_frontdoor_origin_private_link_services[each.value.key].id,
-        data.azurerm_lb.cdn_frontdoor_origin_load_balancers[each.key].id,
-        data.azurerm_storage_blob.cdn_frontdoor_origin_storage_blobs[each.key].id,
-        data.azurerm_linux_web_app.cdn_frontdoor_origin_app_services[each.key].id,
         "'try' function could not find a valid 'private_link_target_id' for the 'cdn_frontdoor_origin': ${each.value.name}!"
       )
     }

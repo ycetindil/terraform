@@ -6,17 +6,17 @@ variable "name" {
   type        = string
 }
 
-variable "location" {
+variable "resource_group_name" {
   description = <<EOD
-    (Required) Specifies the supported Azure location where the resource exists.
+    (Required) The name of the resource group in which to create the Application Insights component.
     Changing this forces a new resource to be created.
   EOD
   type        = string
 }
 
-variable "resource_group_name" {
+variable "location" {
   description = <<EOD
-    (Required) The name of the resource group in which to create the Application Insights component.
+    (Required) Specifies the supported Azure location where the resource exists.
     Changing this forces a new resource to be created.
   EOD
   type        = string

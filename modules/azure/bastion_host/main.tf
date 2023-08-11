@@ -2,8 +2,8 @@
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host
 resource "azurerm_bastion_host" "bas" {
   name                = var.name
-  location            = var.location
   resource_group_name = var.resource_group_name
+  location            = var.location
 
   ip_configuration {
     name                 = var.ip_configuration.name

@@ -1,41 +1,3 @@
-# Use this data source to access information about an existing User Assigned Identity.
-# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity
-data "azurerm_user_assigned_identity" "user_assigned_identities" {
-  count = var.identity != null ? length(var.identity.user_assigned_identities) : 0
-
-  name                = var.identity.user_assigned_identities[count.index].name
-  resource_group_name = var.identity.user_assigned_identities[count.index].resource_group_name
-}
-
-# Use this data source to access information about an existing Subnet within a Virtual Network.
-# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet
-data "azurerm_subnet" "gateway_ip_configuration_subnets" {
-  for_each = local.gateway_ip_configuration_subnets
-
-  name                 = each.value.name
-  virtual_network_name = each.value.virtual_network_name
-  resource_group_name  = each.value.resource_group_name
-}
-
-# Use this data source to access information about an existing Subnet within a Virtual Network.
-# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet
-data "azurerm_subnet" "frontend_ip_configuration_subnets" {
-  for_each = local.frontend_ip_configuration_subnets
-
-  name                 = each.value.name
-  virtual_network_name = each.value.virtual_network_name
-  resource_group_name  = each.value.resource_group_name
-}
-
-# Use this data source to access information about an existing Public IP Address.
-# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/public_ip
-data "azurerm_public_ip" "frontend_ip_configuration_public_ips" {
-  for_each = local.frontend_ip_configuration_public_ips
-
-  name                = each.value.name
-  resource_group_name = each.value.resource_group_name
-}
-
 # Use this data source to access information about an existing Network Interface.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/network_interface
 data "azurerm_network_interface" "backend_address_pool_nics" {
@@ -76,6 +38,72 @@ data "azurerm_linux_web_app" "backend_address_pool_lapps" {
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/windows_web_app
 data "azurerm_windows_web_app" "backend_address_pool_wapps" {
   for_each = local.backend_address_pool_wapp_resources
+
+  name                = each.value.name
+  resource_group_name = each.value.resource_group_name
+}
+
+# Use this data source to access information about an existing Subnet within a Virtual Network.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet
+data "azurerm_subnet" "frontend_ip_configuration_subnets" {
+  for_each = local.frontend_ip_configuration_subnets
+
+  name                 = each.value.name
+  virtual_network_name = each.value.virtual_network_name
+  resource_group_name  = each.value.resource_group_name
+}
+
+# Use this data source to access information about an existing Public IP Address.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/public_ip
+data "azurerm_public_ip" "frontend_ip_configuration_public_ips" {
+  for_each = local.frontend_ip_configuration_public_ips
+
+  name                = each.value.name
+  resource_group_name = each.value.resource_group_name
+}
+
+# Use this data source to access information about an existing Subnet within a Virtual Network.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet
+data "azurerm_subnet" "gateway_ip_configuration_subnets" {
+  for_each = local.gateway_ip_configuration_subnets
+
+  name                 = each.value.name
+  virtual_network_name = each.value.virtual_network_name
+  resource_group_name  = each.value.resource_group_name
+}
+
+# Use this data source to access information about an existing User Assigned Identity.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity
+data "azurerm_user_assigned_identity" "identity_user_assigned_identities" {
+  count = var.identity != null ? length(var.identity.user_assigned_identities) : 0
+
+  name                = var.identity.user_assigned_identities[count.index].name
+  resource_group_name = var.identity.user_assigned_identities[count.index].resource_group_name
+}
+
+# Use this data source to access information about an existing Key Vault.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault
+data "azurerm_key_vault" "ssl_certificate_key_vaults" {
+  for_each = local.ssl_certificate_key_vault_secrets
+
+  name                = each.value.key_vault_secret.key_vault_name
+  resource_group_name = each.value.key_vault_secret.key_vault_resource_group_name
+}
+
+# Use this data source to access information about an existing Key Vault Certificate.
+# NOTE: All arguments including the secret value will be stored in the raw state as plain-text. Read more about sensitive data in state at https://www.terraform.io/docs/state/sensitive-data.html.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_certificate
+data "azurerm_key_vault_certificate" "ssl_certificate_key_vault_certificates" {
+  for_each = local.ssl_certificate_key_vault_secrets
+
+  name         = each.value.key_vault_secret.name
+  key_vault_id = data.azurerm_key_vault.ssl_certificate_key_vaults[each.key].id
+}
+
+# Use this data source to access information about an existing Firewall Policy.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/firewall_policy
+data "azurerm_firewall_policy" "url_path_map_firewall_policies" {
+  for_each = local.url_path_map_firewall_policies
 
   name                = each.value.name
   resource_group_name = each.value.resource_group_name

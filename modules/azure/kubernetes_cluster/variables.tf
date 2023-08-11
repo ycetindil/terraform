@@ -22,6 +22,33 @@ variable "resource_group_name" {
   type        = string
 }
 
+variable "default_node_pool" {
+  description = <<EOD
+    (Required) A default_node_pool block supports the following:
+    - name - (Required) The name which should be used for the default Kubernetes Node Pool.
+      Changing this forces a new resource to be created.
+    - vm_size - (Required) The size of the Virtual Machine, such as Standard_DS2_v2.
+      temporary_name_for_rotation must be specified when attempting a resize.
+    - vnet_subnet - (Optional) The existing Subnet where the Kubernetes Node Pool should exist.
+      Changing this forces a new resource to be created.
+      NOTE: A Route Table must be configured on this Subnet.
+    - node_count - (Optional) The initial number of nodes which should exist in this Node Pool.
+      If specified this must be between 1 and 1000 and between min_count and max_count.
+    NOTE: Changing certain properties of the default_node_pool is done by cycling the system node pool of the cluster.
+    temporary_name_for_rotation must be specified when changing any of the following properties: enable_host_encryption, enable_node_public_ip, kubelet_config, linux_os_config, max_pods, node_taints, only_critical_addons_enabled, os_disk_size_gb, os_disk_type, os_sku, pod_subnet_id, ultra_ssd_enabled, vnet_subnet_id, vm_size, zones.
+  EOD
+  type = object({
+    name    = string
+    vm_size = string
+    vnet_subnet = optional(object({
+      name                 = string
+      virtual_network_name = string
+      resource_group_name  = string
+    }), null)
+    node_count = optional(number, null)
+  })
+}
+
 variable "dns_prefix" {
   description = <<EOD
     (Optional) DNS prefix specified when creating the managed cluster.
@@ -65,43 +92,6 @@ variable "private_cluster_enabled" {
   type        = bool
 }
 
-variable "public_network_access_enabled" {
-  description = <<EOD
-    (Optional) Whether public network access is allowed for this Kubernetes Cluster.
-    Defaults to true.
-    Changing this forces a new resource to be created.
-  EOD
-  default     = null
-  type        = bool
-}
-
-variable "default_node_pool" {
-  description = <<EOD
-    (Required) A default_node_pool block supports the following:
-    - name - (Required) The name which should be used for the default Kubernetes Node Pool.
-      Changing this forces a new resource to be created.
-    - vm_size - (Required) The size of the Virtual Machine, such as Standard_DS2_v2.
-      temporary_name_for_rotation must be specified when attempting a resize.
-    - vnet_subnet - (Optional) The existing Subnet where the Kubernetes Node Pool should exist.
-      Changing this forces a new resource to be created.
-      NOTE: A Route Table must be configured on this Subnet.
-    - node_count - (Optional) The initial number of nodes which should exist in this Node Pool.
-      If specified this must be between 1 and 1000 and between min_count and max_count.
-    NOTE: Changing certain properties of the default_node_pool is done by cycling the system node pool of the cluster.
-    temporary_name_for_rotation must be specified when changing any of the following properties: enable_host_encryption, enable_node_public_ip, kubelet_config, linux_os_config, max_pods, node_taints, only_critical_addons_enabled, os_disk_size_gb, os_disk_type, os_sku, pod_subnet_id, ultra_ssd_enabled, vnet_subnet_id, vm_size, zones.
-  EOD
-  type = object({
-    name    = string
-    vm_size = string
-    vnet_subnet = optional(object({
-      name                 = string
-      virtual_network_name = string
-      resource_group_name  = string
-    }), null)
-    node_count = optional(number, null)
-  })
-}
-
 variable "identity" {
   description = <<EOD
     (Optional) An identity block supports the following:
@@ -119,6 +109,28 @@ variable "identity" {
       name                = string
       resource_group_name = string
     })), null)
+  })
+}
+
+variable "ingress_application_gateway" {
+  description = <<EOD
+    (Optional) A ingress_application_gateway block supports the following:
+    - gateway_id - (Optional) The ID of the Application Gateway to integrate with the ingress controller of this Kubernetes Cluster. See https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-existing for further details.
+    - gateway_name - (Optional) The name of the Application Gateway to be used or created in the Nodepool Resource Group, which in turn will be integrated with the ingress controller of this Kubernetes Cluster. See https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-new for further details.
+    - subnet_cidr - (Optional) The subnet CIDR to be used to create an Application Gateway, which in turn will be integrated with the ingress controller of this Kubernetes Cluster. See https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-new for further details.
+    - subnet - (Optional) The existing subnet on which to create an Application Gateway, which in turn will be integrated with the ingress controller of this Kubernetes Cluster. See https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-new for further details.
+    NOTE: If specifying ingress_application_gateway in conjunction with only_critical_addons_enabled, the AGIC pod will fail to start. A separate azurerm_kubernetes_cluster_node_pool is required to run the AGIC pod successfully. This is because AGIC is classed as a "non-critical addon".
+  EOD
+  default     = null
+  type = object({
+    gateway_id   = optional(string, null)
+    gateway_name = optional(string, null)
+    subnet_cidr  = optional(string, null)
+    subnet = optional(object({
+      name                 = string
+      virtual_network_name = string
+      resource_group_name  = string
+    }), null)
   })
 }
 
@@ -154,24 +166,12 @@ variable "network_profile" {
   })
 }
 
-variable "ingress_application_gateway" {
+variable "public_network_access_enabled" {
   description = <<EOD
-    (Optional) A ingress_application_gateway block supports the following:
-    - gateway_id - (Optional) The ID of the Application Gateway to integrate with the ingress controller of this Kubernetes Cluster. See https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-existing for further details.
-    - gateway_name - (Optional) The name of the Application Gateway to be used or created in the Nodepool Resource Group, which in turn will be integrated with the ingress controller of this Kubernetes Cluster. See https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-new for further details.
-    - subnet_cidr - (Optional) The subnet CIDR to be used to create an Application Gateway, which in turn will be integrated with the ingress controller of this Kubernetes Cluster. See https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-new for further details.
-    - subnet - (Optional) The existing subnet on which to create an Application Gateway, which in turn will be integrated with the ingress controller of this Kubernetes Cluster. See https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-new for further details.
-    NOTE: If specifying ingress_application_gateway in conjunction with only_critical_addons_enabled, the AGIC pod will fail to start. A separate azurerm_kubernetes_cluster_node_pool is required to run the AGIC pod successfully. This is because AGIC is classed as a "non-critical addon".
+    (Optional) Whether public network access is allowed for this Kubernetes Cluster.
+    Defaults to true.
+    Changing this forces a new resource to be created.
   EOD
   default     = null
-  type = object({
-    gateway_id   = optional(string, null)
-    gateway_name = optional(string, null)
-    subnet_cidr  = optional(string, null)
-    subnet = optional(object({
-      name                 = string
-      virtual_network_name = string
-      resource_group_name  = string
-    }), null)
-  })
+  type        = bool
 }

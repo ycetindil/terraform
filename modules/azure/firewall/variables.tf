@@ -6,17 +6,17 @@ variable "name" {
   type        = string
 }
 
-variable "location" {
+variable "resource_group_name" {
   description = <<EOD
-    (Required) Specifies the supported Azure location where the resource exists.
+    (Required) The name of the resource group in which to create the resource.
     Changing this forces a new resource to be created.
   EOD
   type        = string
 }
 
-variable "resource_group_name" {
+variable "location" {
   description = <<EOD
-    (Required) The name of the resource group in which to create the resource.
+    (Required) Specifies the supported Azure location where the resource exists.
     Changing this forces a new resource to be created.
   EOD
   type        = string
@@ -41,7 +41,7 @@ variable "sku_tier" {
 
 variable "firewall_policy" {
   description = <<EOD
-    (Optional) The existing Firewall Policy applied to this Firewall.
+    (Optional) The existing Firewall Policy to apply to this Firewall.
   EOD
   default     = null
   type = object({
@@ -55,14 +55,19 @@ variable "ip_configuration" {
     (Optional) An ip_configuration block as documented below.
     An ip_configuration block supports the following:
     - name - (Required) Specifies the name of the IP Configuration.
-    - subnet - (Optional) Reference to the existing subnet associated with the IP Configuration.
+    - subnet - (Optional) Reference to the existing subnet associated with the IP Configuration supports the following.
       Changing this forces a new resource to be created.
       NOTE: The Subnet used for the Firewall must have the name AzureFirewallSubnet and the subnet mask must be at least a /26.
       NOTE: At least one and only one ip_configuration block may contain a subnet.
-    - public_ip_address - (Optional) Reference to the existing Public IP Address associated with the firewall.
+      - name - (Required) The Name of the Subnet.
+      - virtual_network_name - (Required) The Virtual Network Name of the Subnet.
+      - resource_group_name - (Required) The Resource Group Name of the Subnet.
+    - public_ip_address - (Optional) Reference to the existing Public IP Address associated with the firewall supports the following.
       NOTE: A public ip address is required unless a management_ip_configuration block is specified.
       NOTE: The Public IP must have a Static allocation and Standard SKU.
       NOTE: When multiple ip_configuration blocks with public_ip_address are configured, terraform apply will raise an error when one or some of these ip_configuration blocks are removed. because the public_ip_address_id is still used by the firewall resource until the firewall resource is updated. and the destruction of azurerm_public_ip happens before the update of firewall by default. to destroy of azurerm_public_ip will cause the error. The workaround is to set create_before_destroy=true to the azurerm_public_ip resource lifecycle block. See more detail: destroying.md#create-before-destroy
+      - name - (Required) The Name of the Public IP Address.
+      - resource_group_name - (Required) The Resource Group Name of the Public IP Address.
   EOD
   default     = null
   type = object({
@@ -86,11 +91,16 @@ variable "management_ip_configuration" {
     Changing this forces a new resource to be created.
     A management_ip_configuration block supports the following:
     - name - (Required) Specifies the name of the IP Configuration.
-    - subnet - (Required) Reference to the existing subnet associated with the IP Configuration.
+    - subnet - (Required) Reference to the existing subnet associated with the IP Configuration supports the following:
       Changing this forces a new resource to be created.
       NOTE: The Management Subnet used for the Firewall must have the name AzureFirewallManagementSubnet and the subnet mask must be at least a /26.
-    - public_ip_address - (Required) Reference to the existing Public IP Address associated with the firewall.
+      - name - (Required) The Name of the Subnet.
+      - virtual_network_name - (Required) The Virtual Network Name of the Subnet.
+      - resource_group_name - (Required) The Resource Group Name of the Subnet.
+    - public_ip_address - (Required) Reference to the existing Public IP Address associated with the firewall supports the following:
       NOTE: The Public IP must have a Static allocation and Standard SKU.
+      - name - (Required) The Name of the Public IP Address.
+      - resource_group_name - (Required) The Resource Group Name of the Public IP Address.
   EOD
   default     = null
   type = object({
@@ -109,7 +119,9 @@ variable "management_ip_configuration" {
 
 variable "virtual_hub" {
   description = <<EOD
-    (Optional) Reference to the existing virtual_hub to ssociate with this firewall.
+    (Optional) Reference to the existing virtual_hub to ssociate with this firewall supports the following:
+    - name - (Required) The Name of the Virtual Hub.
+    - resource_group_name - (Required) The Resource Group Name of the Virtual Hub.
   EOD
   default     = null
   type = object({
@@ -120,7 +132,7 @@ variable "virtual_hub" {
 
 variable "firewall_network_rule_collections" {
   description = <<EOD
-    (Optional) Created by azurerm_firewall_network_rule_collection subresource.
+    (Optional) IMPORTANT: Created by azurerm_firewall_network_rule_collection subresource.
     A map of one or more firewall_network_rule_collections supports the following:
     - name - (Required) Specifies the name of the Network Rule Collection which must be unique within the Firewall.
       Changing this forces a new resource to be created.

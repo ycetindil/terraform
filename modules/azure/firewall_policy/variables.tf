@@ -1,14 +1,14 @@
-variable "name" {
+variable "location" {
   description = <<EOD
-    (Required) The name which should be used for this Firewall Policy.
+    (Required) The Azure Region where the Firewall Policy should exist.
     Changing this forces a new Firewall Policy to be created.
   EOD
   type        = string
 }
 
-variable "location" {
+variable "name" {
   description = <<EOD
-    (Required) The Azure Region where the Firewall Policy should exist.
+    (Required) The name which should be used for this Firewall Policy.
     Changing this forces a new Firewall Policy to be created.
   EOD
   type        = string
@@ -34,7 +34,7 @@ variable "sku" {
 
 variable "firewall_policy_rule_collection_groups" {
   description = <<EOD
-    (Optional) Created by azurerm_firewall_policy_rule_collection_group subresource.
+    (Optional) IMPORTANT: Created by azurerm_firewall_policy_rule_collection_group subresource.
     A map of zero or more firewall_policy_rule_collection_group blocks supports the following:
     - name - (Required) The name which should be used for this Firewall Policy Rule Collection Group.
       Changing this forces a new Firewall Policy Rule Collection Group to be created.
