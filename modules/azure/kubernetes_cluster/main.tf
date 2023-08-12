@@ -3,9 +3,9 @@
 # Note: All arguments including the client secret will be stored in the raw state as plain-text. Read more about sensitive data in state at https://www.terraform.io/docs/state/sensitive-data.html.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                          = var.name
-  location                      = var.location
-  resource_group_name           = var.resource_group_name
+  name                = var.name
+  location            = var.location
+  resource_group_name = var.resource_group_name
 
   default_node_pool {
     name           = var.default_node_pool.name
@@ -14,10 +14,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
     vnet_subnet_id = try(data.azurerm_subnet.default_node_pool_subnet[0].id, null)
   }
 
-  dns_prefix                    = var.dns_prefix
-  dns_prefix_private_cluster    = var.dns_prefix_private_cluster
-  node_resource_group           = var.node_resource_group
-  private_cluster_enabled       = var.private_cluster_enabled
+  dns_prefix                 = var.dns_prefix
+  dns_prefix_private_cluster = var.dns_prefix_private_cluster
+  node_resource_group        = var.node_resource_group
+  private_cluster_enabled    = var.private_cluster_enabled
 
   dynamic "identity" {
     for_each = var.identity != null ? [1] : [0]
