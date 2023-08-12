@@ -1,4 +1,38 @@
-map(object({
+variable "name" {
+  description = <<EOD
+    (Required) A map of zero or more ?????? blocks supports the following:
+  EOD
+  type = string
+}
+
+variable "name" {
+  description = <<EOD
+    (Required) A map of zero or more ?????? blocks supports the following:
+  EOD
+  type = string
+}
+
+variable "name" {
+  description = <<EOD
+    (Required) A map of zero or more ?????? blocks supports the following:
+  EOD
+  type = string
+}
+
+variable "name" {
+  description = <<EOD
+    (Required) A map of zero or more ?????? blocks supports the following:
+  EOD
+  type = string
+}
+
+variable "name" {
+  description = <<EOD
+    (Optional) A map of zero or more ?????? blocks supports the following:
+  EOD
+  type = string
+}
+
     name                = string
     location            = string
     resource_group_name = string

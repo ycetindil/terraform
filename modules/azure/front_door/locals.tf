@@ -1,11 +1,11 @@
 locals {
-  # Gather all 'dns_zone's from all custom domains
+  # Gather all 'dns_zone's from all 'custom_domain's
   cdn_frontdoor_custom_domain_dns_zones = {
     for key, domain in var.cdn_frontdoor_custom_domains : key => dns_zone
     if dns_zone != null
   }
 
-  # Gather all 'load_balancer's from all origins
+  # Gather all 'load_balancer's from all 'origin's
   cdn_frontdoor_origin_load_balancers = {
     for key, origin in var.cdn_frontdoor_origins : key => {
       name                = origin.host.name
@@ -14,7 +14,7 @@ locals {
     if origin.host.type == "Microsoft.Network/loadBalancers"
   }
 
-  # Gather all 'private_link_service's from all origins
+  # Gather all 'private_link_service's from all 'origin's
   cdn_frontdoor_origin_private_link_services = {
     for key, origin in var.cdn_frontdoor_origins : key => {
       name                = origin.private_link.target.name
@@ -23,7 +23,7 @@ locals {
     if origin.host.type == "Microsoft.Network/loadBalancers" && origin.private_link != null
   }
 
-  # Gather all 'storage_blob's from all origins
+  # Gather all 'storage_blob's from all 'origin's
   cdn_frontdoor_origin_storage_blobs = {
     for key, origin in var.cdn_frontdoor_origins : key => {
       name                   = origin.host.name
@@ -33,7 +33,7 @@ locals {
     if origin.host.type == "Microsoft.Storage/blobs"
   }
 
-  # Gather all 'app_service's from all origins
+  # Gather all 'app_service's from all 'origin's
   cdn_frontdoor_origin_app_services = {
     for key, origin in var.cdn_frontdoor_origins : key => {
       name                = origin.host.name
