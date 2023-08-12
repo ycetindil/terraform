@@ -1,6 +1,6 @@
-variable "name" {
+variable "admin_username" {
   description = <<EOD
-    (Required) The name of the Linux Virtual Machine.
+    (Required) The username of the local administrator used for the Virtual Machine.
     Changing this forces a new resource to be created.
   EOD
   type        = string
@@ -14,67 +14,25 @@ variable "location" {
   type        = string
 }
 
-variable "resource_group_name" {
+variable "name" {
   description = <<EOD
-    (Required) The name of the Resource Group in which the Linux Virtual Machine should be exist.
+    (Required) The name of the Linux Virtual Machine.
     Changing this forces a new resource to be created.
   EOD
-  type        = string
-}
-
-variable "size" {
-  description = <<EOD
-    (Required) The SKU which should be used for this Virtual Machine, such as Standard_F2.
-  EOD
-  type        = string
-}
-
-variable "admin_username" {
-  description = <<EOD
-    (Required) The username of the local administrator used for the Virtual Machine.
-    Changing this forces a new resource to be created.
-  EOD
-  type        = string
-}
-
-variable "admin_password" {
-  description = <<EOD
-    (Optional) The Password which should be used for the local-administrator on this Virtual Machine.
-    Changing this forces a new resource to be created.
-    NOTE: When an admin_password is specified disable_password_authentication must be set to false.
-    NOTE: One of either admin_password or admin_ssh_key must be specified.
-  EOD
-  default     = null
-  type        = string
-}
-
-variable "disable_password_authentication" {
-  description = <<EOD
-    (Optional) Should Password Authentication be disabled on this Virtual Machine?
-    Defaults to true.
-    Changing this forces a new resource to be created.
-    NOTE: In general we'd recommend using SSH Keys for authentication rather than Passwords - but there's tradeoff's to each - please see https://security.stackexchange.com/questions/69407/why-is-using-an-ssh-key-more-secure-than-using-passwords for more information.
-    NOTE: When an admin_password is specified disable_password_authentication must be set to false.
-  EOD
-  default     = null
-  type        = bool
-}
-
-variable "custom_data" {
-  description = <<EOD
-    (Optional) The Base64-Encoded Custom Data which should be used for this Virtual Machine.
-    Changing this forces a new resource to be created.
-  EOD
-  default     = null
   type        = string
 }
 
 variable "network_interfaces" {
   description = <<EOD
-    (Required). A list of Network Interface keys which should be attached to this Virtual Machine.
-    The first Network Interface in this list will be the Primary Network Interface on the Virtual Machine.
+    (Optional) A map of zero or more blocks supports the following:
+    - name (Required) - Specifies the name of the Network Interface.
+    - resource_group_name (Required) - Specifies the name of the resource group the Network Interface is located in.
   EOD
-  type        = list(string)
+  default     = {}
+  type = map(object({
+    name                = string
+    resource_group_name = string
+  }))
 }
 
 variable "os_disk" {
@@ -96,22 +54,30 @@ variable "os_disk" {
   })
 }
 
-variable "identity" {
+variable "resource_group_name" {
   description = <<EOD
-    (Optional) An identity block supports the following:
-    - type - (Required) Specifies the type of Managed Service Identity that should be configured on this Linux Virtual Machine.
-      Possible values are SystemAssigned, UserAssigned, "SystemAssigned, UserAssigned" (to enable both).
-    - identity_ids - Specifies a list of User Assigned Managed Identity IDs to be assigned to this Linux Virtual Machine.
-      NOTE: This is required when type is set to UserAssigned or "SystemAssigned, UserAssigned".
+    (Required) The name of the Resource Group in which the Linux Virtual Machine should be exist.
+    Changing this forces a new resource to be created.
+  EOD
+  type        = string
+}
+
+variable "size" {
+  description = <<EOD
+    (Required) The SKU which should be used for this Virtual Machine, such as Standard_F2.
+  EOD
+  type        = string
+}
+
+variable "admin_password" {
+  description = <<EOD
+    (Optional) The Password which should be used for the local-administrator on this Virtual Machine.
+    Changing this forces a new resource to be created.
+    NOTE: When an admin_password is specified disable_password_authentication must be set to false.
+    NOTE: One of either admin_password or admin_ssh_key must be specified.
   EOD
   default     = null
-  type = object({
-    type = string
-    user_assigned_identities = optional(list(object({
-      name                = string
-      resource_group_name = string
-    })), null)
-  })
+  type        = string
 }
 
 variable "admin_ssh_keys" {
@@ -138,6 +104,58 @@ variable "admin_ssh_keys" {
   }))
 }
 
+variable "boot_diagnostics" {
+  description = <<EOD
+    (Optional) A boot_diagnostics block as defined below.
+    A boot_diagnostics block supports the following:
+    - storage_account_uri - (Optional) The Primary/Secondary Endpoint for the Azure Storage Account which should be used to store Boot Diagnostics, including Console Output and Screenshots from the Hypervisor.
+    NOTE: Passing a null value will utilize a Managed Storage Account to store Boot Diagnostics
+  EOD
+  default     = null
+  type = object({
+    storage_uri = optional(string, null)
+  })
+}
+
+variable "custom_data" {
+  description = <<EOD
+    (Optional) The Base64-Encoded Custom Data which should be used for this Virtual Machine.
+    Changing this forces a new resource to be created.
+  EOD
+  default     = null
+  type        = string
+}
+
+variable "disable_password_authentication" {
+  description = <<EOD
+    (Optional) Should Password Authentication be disabled on this Virtual Machine?
+    Defaults to true.
+    Changing this forces a new resource to be created.
+    NOTE: In general we'd recommend using SSH Keys for authentication rather than Passwords - but there's tradeoff's to each - please see https://security.stackexchange.com/questions/69407/why-is-using-an-ssh-key-more-secure-than-using-passwords for more information.
+    NOTE: When an admin_password is specified disable_password_authentication must be set to false.
+  EOD
+  default     = null
+  type        = bool
+}
+
+variable "identity" {
+  description = <<EOD
+    (Optional) An identity block supports the following:
+    - type - (Required) Specifies the type of Managed Service Identity that should be configured on this Linux Virtual Machine.
+      Possible values are SystemAssigned, UserAssigned, "SystemAssigned, UserAssigned" (to enable both).
+    - identity_ids - Specifies a list of User Assigned Managed Identity IDs to be assigned to this Linux Virtual Machine.
+      NOTE: This is required when type is set to UserAssigned or "SystemAssigned, UserAssigned".
+  EOD
+  default     = null
+  type = object({
+    type = string
+    user_assigned_identities = optional(list(object({
+      name                = string
+      resource_group_name = string
+    })), null)
+  })
+}
+
 variable "source_image_reference" {
   description = <<EOD
     (Optional) A source_image_reference block as defined below.
@@ -160,15 +178,10 @@ variable "source_image_reference" {
   })
 }
 
-variable "boot_diagnostics" {
+variable "tags" {
   description = <<EOD
-    (Optional) A boot_diagnostics block as defined below.
-    A boot_diagnostics block supports the following:
-    - storage_account_uri - (Optional) The Primary/Secondary Endpoint for the Azure Storage Account which should be used to store Boot Diagnostics, including Console Output and Screenshots from the Hypervisor.
-    NOTE: Passing a null value will utilize a Managed Storage Account to store Boot Diagnostics
+    (Optional) A mapping of tags which should be assigned to this Virtual Machine.
   EOD
   default     = null
-  type = object({
-    storage_uri = optional(string, null)
-  })
+  type        = map(string)
 }

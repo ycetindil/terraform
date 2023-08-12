@@ -1,3 +1,12 @@
+# Use this data source to access information about an existing Network Interface.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/network_interface
+data "azurerm_network_interface" "network_interfaces" {
+  for_each = var.network_interfaces
+
+  name                = each.value.name
+  resource_group_name = each.value.resource_group_name
+}
+
 # Use this data source to access information about an existing SSH Public Key.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/ssh_public_key
 data "azurerm_ssh_public_key" "admin_ssh_keys_from_azure" {
@@ -14,13 +23,4 @@ data "azurerm_user_assigned_identity" "user_assigned_identities" {
 
   name                = var.identity.user_assigned_identities[count.index].name
   resource_group_name = var.identity.user_assigned_identities[count.index].resource_group_name
-}
-
-# Use this data source to access information about an existing Network Security Group.
-# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/network_security_group
-data "azurerm_network_security_group" "network_interface_network_security_groups" {
-  for_each = local.network_interface_network_security_groups
-
-  name                = each.value.name
-  resource_group_name = each.value.resource_group_name
 }
