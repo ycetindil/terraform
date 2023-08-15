@@ -83,6 +83,7 @@ variable "admin_password" {
 variable "admin_ssh_keys" {
   description = <<EOD
     (Optional) A map of zero or more admin_ssh_keys supports the following:
+    NOTE: One of either admin_password or admin_ssh_key must be specified.
     - username - (Required) The Username for which this Public SSH Key should be configured.
       Changing this forces a new resource to be created.
     - public_key - (Required) The Public Key which should be used for authentication, which needs to be at least 2048-bit and in ssh-rsa format.
@@ -140,11 +141,15 @@ variable "disable_password_authentication" {
 
 variable "identity" {
   description = <<EOD
-    (Optional) An identity block supports the following:
+    (Optional) An identity block as defined below.
+    An identity block supports the following:
     - type - (Required) Specifies the type of Managed Service Identity that should be configured on this Linux Virtual Machine.
       Possible values are SystemAssigned, UserAssigned, "SystemAssigned, UserAssigned" (to enable both).
-    - identity_ids - Specifies a list of User Assigned Managed Identity IDs to be assigned to this Linux Virtual Machine.
+    - identity_ids - (Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Linux Virtual Machine.
       NOTE: This is required when type is set to UserAssigned or "SystemAssigned, UserAssigned".
+      IMPORTANT: Procured by the module by collecting these existing user_assigned_identities data:
+      - name - (Required) The Name of the User Assigned Identity.
+      - resource_group_name - (Required) The Name of the Resource Group of the User Assigned Identity.
   EOD
   default     = null
   type = object({
@@ -160,6 +165,7 @@ variable "source_image_reference" {
   description = <<EOD
     (Optional) A source_image_reference block as defined below.
     Changing this forces a new resource to be created.
+    NOTE: One of either source_image_id or source_image_reference must be set.
     The source_image_reference block supports the following:
     - publisher - (Required) Specifies the publisher of the image used to create the virtual machines.
       Changing this forces a new resource to be created.
@@ -170,6 +176,7 @@ variable "source_image_reference" {
     - version - (Required) Specifies the version of the image used to create the virtual machines.
       Changing this forces a new resource to be created.
   EOD
+  default     = null
   type = object({
     publisher = string
     offer     = string

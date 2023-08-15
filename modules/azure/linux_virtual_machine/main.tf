@@ -27,7 +27,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     for_each = var.admin_ssh_keys
 
     content {
-      username = var.admin_ssh_key.value.username
+      username = admin_ssh_key.value.username
       public_key = try(
         data.azurerm_ssh_public_key.admin_ssh_keys_from_azure[admin_ssh_key.key].public_key,
         file(admin_ssh_key.value.public_key.from_local_computer.path),
@@ -56,11 +56,15 @@ resource "azurerm_linux_virtual_machine" "vm" {
     }
   }
 
-  source_image_reference {
-    publisher = var.source_image_reference.publisher
-    offer     = var.source_image_reference.offer
-    sku       = var.source_image_reference.sku
-    version   = var.source_image_reference.version
+  dynamic "source_image_reference" {
+    for_each = var.source_image_reference != null ? [1] : []
+
+    content {
+      publisher = var.source_image_reference.publisher
+      offer     = var.source_image_reference.offer
+      sku       = var.source_image_reference.sku
+      version   = var.source_image_reference.version
+    }
   }
 
   tags = var.tags

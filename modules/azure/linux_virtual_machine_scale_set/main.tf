@@ -1,102 +1,152 @@
-data "azurerm_ssh_public_key" "ssh_public_key" {
-  resource_group_name = var.admin_ssh_key.resource_group_name
-  name                = var.admin_ssh_key.name
-}
-
-data "azurerm_shared_image" "shared_image" {
-  name                = var.shared_image.name
-  gallery_name        = var.shared_image.gallery_name
-  resource_group_name = var.shared_image.resource_group_name
-}
-
-data "azurerm_subnet" "subnets" {
-  for_each = var.network_interface.ip_configurations
-
-  name                 = each.value.subnet.name
-  virtual_network_name = each.value.subnet.virtual_network_name
-  resource_group_name  = each.value.subnet.resource_group_name
-}
-
-data "azurerm_network_security_group" "network_security_group" {
-  name                = var.network_interface.network_security_group.name
-  resource_group_name = var.network_interface.network_security_group.resource_group_name
-}
-
-locals {
-  # Collect all load balancer backend address pool names from all ip configurations
-  # Apply toset to cancel the duplicates
-  lb_backend_address_pool_names_from_all_ip_configurations = toset(flatten([
-    for k, ip_configuration in var.network_interface.ip_configurations : ip_configuration.load_balancer_backend_address_pool_names
-  ]))
-}
-
-data "azurerm_lb" "lb" {
-  name                = var.load_balancer.name
-  resource_group_name = var.load_balancer.resource_group_name
-}
-
-# For there is no Terraform data resource readily available for 'lb_health_probe', we need to use the azapi data.
-data "azapi_resource" "health_probe" {
-  type      = "Microsoft.Network/loadBalancers/probes@2023-02-01"
-  name      = var.health_probe_name
-  parent_id = data.azurerm_lb.lb.id
-}
-
-data "azurerm_lb_backend_address_pool" "lb_backend_address_pools" {
-  for_each = local.lb_backend_address_pool_names_from_all_ip_configurations
-
-  name            = each.value
-  loadbalancer_id = data.azurerm_lb.lb.id
-}
-
-resource "azurerm_linux_virtual_machine_scale_set" "linux_virtual_machine_scale_set" {
+# Manages a Linux Virtual Machine Scale Set.
+# NOTE: As of the v2.86.0 (November 19, 2021) release of the provider this resource will only create Virtual Machine Scale Sets with the Uniform Orchestration Mode.
+# NOTE: All arguments including the administrator login and password will be stored in the raw state as plain-text. Read more about sensitive data in state at https://www.terraform.io/docs/state/sensitive-data.html.
+# NOTE: Terraform will automatically update & reimage the nodes in the Scale Set (if Required) during an Update - this behaviour can be configured using the features setting within the Provider block as described at https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#features.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set
+resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   name                = var.name
-  resource_group_name = var.resource_group_name
   location            = var.location
-  sku                 = var.sku
-  instances           = var.instances
+  resource_group_name = var.resource_group_name
   admin_username      = var.admin_username
-  source_image_id     = data.azurerm_shared_image.shared_image.id
-  upgrade_mode        = var.upgrade_mode
-  health_probe_id     = data.azapi_resource.health_probe.id
+  instances           = var.instances
+  sku                 = var.sku
 
-  admin_ssh_key {
-    username   = var.admin_username
-    public_key = data.azurerm_ssh_public_key.ssh_public_key.public_key
+  dynamic "network_interface" {
+    for_each = var.network_interfaces
+
+    content {
+      name                      = network_interface.value.name
+
+      dynamic "ip_configuration" {
+        for_each = network_interface.value.ip_configurations
+
+        content {
+          name      = ip_configuration.value.name
+          application_gateway_backend_address_pool_ids = [
+            
+          ]
+          application_security_group_ids = ip_configuration.value.application_security_group_ids
+          load_balancer_backend_address_pool_ids = ???
+          load_balancer_inbound_nat_rules_ids = ???
+          primary   = ip_configuration.value.primary
+
+          dynamic "public_ip_address" {
+            for_each = ip_configuration.value.public_ip_address != null ? [1] : []
+
+            content {
+              name = ip_configuration.value.public_ip_address.name
+              domain_name_label = ip_configuration.value.public_ip_address.domain_name_label
+              idle_timeout_in_minutes = ip_configuration.value.public_ip_address.idle_timeout_in_minutes
+
+              dynamic "ip_tag" {
+                for_each = ip_configuration.value.public_ip_address.ip_tags
+
+                content {
+                  tag = ip_tag.value.tag
+                  type = ip_tag.value.type
+                }
+              }
+
+              public_ip_prefix_id = public_ip_address.value.public_ip_prefix_id
+              version = public_ip_address.value.version
+            }
+          }
+
+          subnet_id = ???
+          version = ip_configuration.value.version
+        }
+      }
+
+      dns_servers = network_interface.value.dns_servers
+      enable_accelerated_networking = network_interface.value.enable_accelerated_networking
+      enable_ip_forwarding = network_interface.value.enable_ip_forwarding
+      network_security_group_id = ???
+      primary                   = network_interface.value.primary
+    }
   }
 
   os_disk {
-    storage_account_type = var.os_disk.storage_account_type
     caching              = var.os_disk.caching
-  }
+    storage_account_type = var.os_disk.storage_account_type
 
-  network_interface {
-    name                      = var.network_interface.name
-    primary                   = var.network_interface.primary
-    network_security_group_id = data.azurerm_network_security_group.network_security_group.id
-
-    dynamic "ip_configuration" {
-      for_each = var.network_interface.ip_configurations
+    dynamic "diff_disk_settings" {
+      for_each = var.os_disk.diff_disk_settings != null ? [1] : []
 
       content {
-        name      = ip_configuration.value.name
-        primary   = ip_configuration.value.primary
-        subnet_id = data.azurerm_subnet.subnets[ip_configuration.key].id
-        load_balancer_backend_address_pool_ids = [
-          for pool_name in ip_configuration.value.load_balancer_backend_address_pool_names : data.azurerm_lb_backend_address_pool.lb_backend_address_pools[pool_name].id
-        ]
+        option = var.os_disk.diff_disk_settings.option
+        placement = var.os_disk.diff_disk_settings.placement
       }
+    }
+
+    disk_encryption_set_id = var.os_disk.disk_encryption_set_id
+    disk_size_gb = var.os_disk.disk_size_gb
+    secure_vm_disk_encryption_set_id = var.os_disk.secure_vm_disk_encryption_set_id
+    security_encryption_type = var.os_disk.security_encryption_type
+    write_accelerator_enabled = var.os_disk.write_accelerator_enabled
+  }
+
+  admin_password = var.admin_password
+
+  dynamic "admin_ssh_key" {
+    for_each = var.admin_ssh_keys
+
+    content {
+      public_key = try(
+        data.azurerm_ssh_public_key.admin_ssh_keys_from_azure[admin_ssh_key.key].public_key,
+        file(admin_ssh_key.value.public_key.from_local_computer.path),
+        "'try' function could not find a valid 'public_key' for the 'admin_ssh_key': ${admin_ssh_key.key} of the 'vmss': ${var.name}!"
+      )
+      username = admin_ssh_key.value.username
+    }
+  }
+
+  dynamic "boot_diagnostics" {
+    for_each = var.boot_diagnostics != null ? [1] : []
+
+    content {
+      storage_account_uri = var.boot_diagnostics.storage_uri
+    }
+  }
+
+  custom_data = var.custom_data
+  disable_password_authentication = var.disable_password_authentication
+  health_probe_id     = ???
+
+  dynamic "identity" {
+    for_each = var.identity != null ? [1] : [0]
+
+    content {
+      type         = var.identity.type
+      identity_ids = try(data.azurerm_user_assigned_identity.user_assigned_identities[*].id, null)
     }
   }
 
   dynamic "rolling_upgrade_policy" {
-    for_each = var.upgrade_mode == "Rolling" ? [1] : []
+    for_each = lower(var.upgrade_mode) == "rolling" ? [1] : []
 
     content {
+      cross_zone_upgrades_enabled = var.rolling_upgrade_policy.cross_zone_upgrades_enabled
       max_batch_instance_percent              = var.rolling_upgrade_policy.max_batch_instance_percent
       max_unhealthy_instance_percent          = var.rolling_upgrade_policy.max_unhealthy_instance_percent
       max_unhealthy_upgraded_instance_percent = var.rolling_upgrade_policy.max_unhealthy_upgraded_instance_percent
       pause_time_between_batches              = var.rolling_upgrade_policy.pause_time_between_batches
+      prioritize_unhealthy_instances_enabled = var.rolling_upgrade_policy.prioritize_unhealthy_instances_enabled
     }
   }
+
+  source_image_id     = try(data.azurerm_shared_image.source_image[0].id, null)
+
+  dynamic "source_image_reference" {
+    for_each = var.source_image_reference != null ? [1] : []
+
+    content {
+      publisher = var.source_image_reference.publisher
+      offer     = var.source_image_reference.offer
+      sku       = var.source_image_reference.sku
+      version   = var.source_image_reference.version
+    }
+  }
+
+  tags = var.tags
+  upgrade_mode        = var.upgrade_mode
 }
