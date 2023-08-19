@@ -37,8 +37,8 @@ variable "ip_configuration" {
       Changing this forces a new resource to be created.
   EOD
   type = object({
-    name = string
-    subnet_id = string
+    name                 = string
+    subnet_id            = string
     public_ip_address_id = string
   })
 }

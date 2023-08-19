@@ -1,20 +1,20 @@
 # Manages an Azure Firewall.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall
-resource "azurerm_firewall" "fw" {
+resource "azurerm_firewall" "firewall" {
   name                = var.name
   resource_group_name = var.resource_group_name
   location            = var.location
   sku_name            = var.sku_name
   sku_tier            = var.sku_tier
-  firewall_policy_id  = try(data.azurerm_firewall_policy.firewall_policy[0].id, null)
+  firewall_policy_id  = var.firewall_policy_id
 
   dynamic "ip_configuration" {
     for_each = var.ip_configuration != null ? [1] : []
 
     content {
       name                 = var.ip_configuration.name
-      subnet_id            = try(data.azurerm_subnet.firewall_subnet[0].id, null)
-      public_ip_address_id = try(data.azurerm_public_ip.firewall_public_ip_address[0].id, null)
+      subnet_id            = var.ip_configuration.subnet_id
+      public_ip_address_id = var.ip_configuration.public_ip_address_id
     }
   }
 
@@ -23,8 +23,8 @@ resource "azurerm_firewall" "fw" {
 
     content {
       name                 = var.management_ip_configuration.name
-      subnet_id            = data.azurerm_subnet.existing_firewall_management_subnet[0].id
-      public_ip_address_id = data.azurerm_public_ip.firewall_management_public_ip_address[0].id
+      subnet_id            = var.management_ip_configuration.subnet_id
+      public_ip_address_id = var.management_ip_configuration.public_ip_address_id
     }
   }
 
@@ -32,35 +32,8 @@ resource "azurerm_firewall" "fw" {
     for_each = var.virtual_hub != null ? [1] : []
 
     content {
-      virtual_hub_id = data.azurerm_virtual_hub.virtual_hub[0].id
-    }
-  }
-}
-
-# Manages a Network Rule Collection within an Azure Firewall.
-# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall_network_rule_collection
-resource "azurerm_firewall_network_rule_collection" "fwnrcS" {
-  for_each = var.firewall_network_rule_collections
-
-  name                = each.value.name
-  azure_firewall_name = azurerm_firewall.fw.name
-  resource_group_name = azurerm_firewall.fw.resource_group_name
-  priority            = each.value.priority
-  action              = each.value.action
-
-  dynamic "rule" {
-    for_each = each.value.rules
-
-    content {
-      name                  = rule.value.name
-      description           = rule.value.description
-      source_addresses      = rule.value.source_addresses
-      source_ip_groups      = rule.value.source_ip_groups
-      destination_addresses = rule.value.destination_addresses
-      destination_ip_groups = rule.value.destination_ip_groups
-      destination_fqdns     = rule.value.destination_fqdns
-      destination_ports     = rule.value.destination_ports
-      protocols             = rule.value.protocols
+      virtual_hub_id  = var.virtual_hub.virtual_hub_id
+      public_ip_count = var.virtual_hub.public_ip_count
     }
   }
 }

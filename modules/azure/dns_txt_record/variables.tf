@@ -3,7 +3,7 @@ variable "name" {
     (Required) The name of the DNS TXT Record.
     Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "resource_group_name" {
@@ -11,7 +11,7 @@ variable "resource_group_name" {
     (Required) Specifies the resource group where the DNS Zone (parent resource) exists.
     Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "zone_name" {
@@ -19,14 +19,14 @@ variable "zone_name" {
     (Required) Specifies the DNS Zone where the resource exists.
     Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "ttl" {
   description = <<EOD
     (Required) The Time To Live (TTL) of the DNS record in seconds.
   EOD
-  type = number
+  type        = number
 }
 
 variable "record" {
@@ -45,6 +45,6 @@ variable "tags" {
   description = <<EOD
     (Optional) A mapping of tags to assign to the resource.
   EOD
-  default = null
-  type = map(string)
+  default     = null
+  type        = map(string)
 }

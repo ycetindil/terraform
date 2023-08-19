@@ -3,7 +3,7 @@ variable "name" {
     (Required) The name of the DNS CNAME Record.
     Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "resource_group_name" {
@@ -11,7 +11,7 @@ variable "resource_group_name" {
     (Required) Specifies the resource group where the DNS Zone (parent resource) exists.
     Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "zone_name" {
@@ -19,14 +19,14 @@ variable "zone_name" {
     (Required) Specifies the DNS Zone where the resource exists.
     Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "ttl" {
   description = <<EOD
     (Required) The Time To Live (TTL) of the DNS record in seconds.
   EOD
-  type = number
+  type        = number
 }
 
 variable "record" {
@@ -34,6 +34,6 @@ variable "record" {
     (Optional) The target of the CNAME.
     NOTE: either record OR target_resource_id must be specified, but not both.
   EOD
-  default = null
-  type = string
+  default     = null
+  type        = string
 }

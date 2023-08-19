@@ -10,6 +10,6 @@ resource "azurerm_dns_txt_record" "dns_txt_record" {
   record {
     value = var.record.value
   }
-  
+
   tags = var.tags
 }
