@@ -34,7 +34,8 @@ variable "application_type" {
 
 variable "log_analytics_workspace" {
   description = <<EOD
-    (Optional) Specifies an existing log analytics workspace resource.
+    (Optional) Specifies the id of a log analytics workspace resource.
+    NOTE: This can not be removed after set. More details can be found at https://docs.microsoft.com/azure/azure-monitor/app/convert-classic-resource#migration-process.
   EOD
   default     = null
   type = object({
