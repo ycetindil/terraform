@@ -1,60 +1,26 @@
-variable "key_vault" {
+variable "key_vault_id" {
   description = <<EOD
-    (Required) Specifies the Key Vault resource.
-    - name - (Required) The Name of the Key Vault
-    - resource_group_name - (Required) The Name of the Resource Group of the Key Vault
+    (Required) Specifies the id of the Key Vault resource. Changing this forces a new resource to be created.
   EOD
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
+  type = string
 }
 
-variable "object" {
+variable "tenant_id" {
   description = <<EOD
-    (Required) The necessary information of the resource, or a user, service principal or security group in the Azure Active Directory tenant for the vault.
-    - type - (Required) Possible values are user, group, service_principal, user_assigned_identity, system_assigned_identity.
-      Azure services that can use managed identities are listed at https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/managed-identities-status
-      - user - (Optional) This block supports the following:
-        - name - (Required) The Name of the User.
-      - group - (Optional) This block supports the following:
-        - name - (Required) The Name of the Group.
-      - service_principal - (Optional) This block supports the following:
-        - name - (Required) The Name of the Service Principal.
-      - user_assigned_identity - (Optional) This block supports the following:
-        - name - (Required) The Name of the User Assigned Identity.
-        - resource_group_name - (Required) The Name of the Resource Group of the User Assigned Identity.
-      - system_assigned_identity - (Optional) This block supports the following:
-        - object_name - (Required) The Name of the System Assigned Identity Object.
-        - object_resource_group_name - (Required) The Name of the Resource Group of the System Assigned Identity Object.
-        - object_type - (Required) The Type of the System Assigned Identity Object.
-          Possible object_type list can be found at https://learn.microsoft.com/en-us/azure/governance/resource-graph/reference/supported-tables-resources
-        - object_os_type - (Optional) The OS Type of the System Assigned Identity Object.
-          Required for objects such as web_apps, virtual_machines, virtual_machine_scale_sets, ...
-          Possible object_os_type values are linux and windows.
+    (Required) The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
+    Changing this forces a new resource to be created.
   EOD
-  type = object({
-    type = string
-    user = optional(object({
-      name = string
-    }), null)
-    group = optional(object({
-      name = string
-    }), null)
-    service_principal = optional(object({
-      name = string
-    }), null)
-    user_assigned_identity = optional(object({
-      name                = string
-      resource_group_name = string
-    }), null)
-    system_assigned_identity = optional(object({
-      object_name                = string
-      object_resource_group_name = string
-      object_type                = string
-      object_os_type             = optional(string, "") // Should not be 'null' for the lower function
-    }), null)
-  })
+  type = string
+}
+
+variable "object_id" {
+  description = <<EOD
+    (Required) The object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault.
+    The object ID of a service principal can be fetched from azuread_service_principal.object_id.
+    The object ID must be unique for the list of access policies.
+    Changing this forces a new resource to be created.
+  EOD
+  type = string
 }
 
 variable "certificate_permissions" {

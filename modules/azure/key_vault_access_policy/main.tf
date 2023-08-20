@@ -11,28 +11,12 @@
 # NOTE: It's possible to define Key Vault Access Policies both within the azurerm_key_vault resource via the access_policy block and by using the azurerm_key_vault_access_policy resource. However it's not possible to use both methods to manage Access Policies within a KeyVault, since there'll be conflicts.
 # NOTE: Azure permits a maximum of 1024 Access Policies per Key Vault - more information can be found at https://docs.microsoft.com/azure/key-vault/key-vault-secure-your-key-vault#data-plane-access-control.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy
-resource "azurerm_key_vault_access_policy" "kvap" {
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id = try(
-    data.azuread_user.user[0].object_id,
-    data.azuread_group.group[0].object_id,
-    data.azuread_service_principal.service_principal[0].object_id,
-    data.azurerm_user_assigned_identity.user_assigned_identity[0].principal_id,
-    data.azurerm_linux_web_app.linux_web_app[0].identity[0].principal_id,
-    data.azurerm_windows_web_app.windows_web_app[0].identity[0].principal_id,
-    "'try' function could not find a valid 'object_id' for the 'key_vault_access_policy'!"
-  )
+resource "azurerm_key_vault_access_policy" "key_vault_access_policy" {
+  key_vault_id = var.key_vault_id
+  tenant_id    = var.tenant_id
+  object_id = var.object_id
   certificate_permissions = var.certificate_permissions
   key_permissions         = var.key_permissions
   secret_permissions      = var.secret_permissions
   storage_permissions     = var.storage_permissions
-
-  lifecycle {
-    ignore_changes = [
-      key_vault_id,
-      tenant_id,
-      object_id
-    ]
-  }
 }
