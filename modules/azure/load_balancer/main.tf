@@ -1,72 +1,27 @@
+# Manages a Load Balancer Resource.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb
 resource "azurerm_lb" "lb" {
   name                = var.name
   resource_group_name = var.resource_group_name
   location            = var.location
-  sku                 = var.sku
+  edge_zone           = var.edge_zone
 
   dynamic "frontend_ip_configuration" {
     for_each = var.frontend_ip_configurations
 
     content {
-      name      = frontend_ip_configuration.value.name
-      subnet_id = data.azurerm_subnet.subnets[frontend_ip_configuration.key].id
+      name                          = frontend_ip_configuration.value.name
+      zones                         = frontend_ip_configuration.value.zones
+      subnet_id                     = frontend_ip_configuration.value.subnet_id
+      private_ip_address            = frontend_ip_configuration.value.private_ip_address
+      private_ip_address_allocation = frontend_ip_configuration.value.private_ip_address_allocation
+      private_ip_address_version    = frontend_ip_configuration.value.private_ip_address_version
+      public_ip_address_id          = frontend_ip_configuration.value.public_ip_address_id
+      public_ip_prefix_id           = frontend_ip_configuration.value.public_ip_prefix_id
     }
   }
-}
 
-resource "azurerm_lb_backend_address_pool" "lb_backend_address_pools" {
-  for_each = var.lb_backend_address_pools
-
-  loadbalancer_id = azurerm_lb.lb.id
-  name            = each.value.name
-}
-
-resource "azurerm_lb_probe" "lb_probes" {
-  for_each = var.lb_probes
-
-  loadbalancer_id = azurerm_lb.lb.id
-  name            = each.value.name
-  protocol        = each.value.protocol
-  port            = each.value.port
-}
-
-resource "azurerm_lb_rule" "lb_rules" {
-  for_each = var.lb_rules
-
-  name            = each.value.name
-  loadbalancer_id = azurerm_lb.lb.id
-  probe_id        = azurerm_lb_probe.lb_probes[each.value.probe].id
-  backend_address_pool_ids = [
-    for pool in each.value.backend_address_pools : azurerm_lb_backend_address_pool.lb_backend_address_pools[pool].id
-  ]
-  frontend_ip_configuration_name = each.value.frontend_ip_configuration_name
-  protocol                       = each.value.protocol
-  frontend_port                  = each.value.frontend_port
-  backend_port                   = each.value.backend_port
-
-  depends_on = [
-    azurerm_lb_backend_address_pool.lb_backend_address_pools
-  ]
-}
-
-resource "azurerm_private_link_service" "private_link_service" {
-  count = var.private_link_service != null ? 1 : 0
-
-  name                = var.private_link_service.name
-  resource_group_name = var.resource_group_name
-  location            = var.location
-
-  auto_approval_subscription_ids              = [data.azurerm_client_config.client_config.subscription_id]
-  visibility_subscription_ids                 = [data.azurerm_client_config.client_config.subscription_id]
-  load_balancer_frontend_ip_configuration_ids = [azurerm_lb.lb.frontend_ip_configuration[0].id]
-
-  dynamic "nat_ip_configuration" {
-    for_each = var.private_link_service.nat_ip_configurations
-
-    content {
-      name      = nat_ip_configuration.value.name
-      subnet_id = data.azurerm_subnet.subnets_pls[nat_ip_configuration.key].id
-      primary   = nat_ip_configuration.value.primary
-    }
-  }
+  sku      = var.sku
+  sku_tier = var.sku_tier
+  tags     = var.tags
 }

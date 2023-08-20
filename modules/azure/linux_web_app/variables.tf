@@ -3,7 +3,7 @@ variable "location" {
     (Required) The Azure Region where the Linux Web App should exist.
     Changing this forces a new Linux Web App to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "name" {
@@ -12,7 +12,7 @@ variable "name" {
     Changing this forces a new Linux Web App to be created.
     NOTE: Terraform will perform a name availability check as part of the creation progress, if this Web App is part of an App Service Environment terraform will require Read permission on the ASE for this to complete reliably.
   EOD
-  type = string
+  type        = string
 }
 
 variable "resource_group_name" {
@@ -20,14 +20,14 @@ variable "resource_group_name" {
     (Required) The name of the Resource Group where the Linux Web App should exist.
     Changing this forces a new Linux Web App to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "service_plan_id" {
   description = <<EOD
     (Required) The ID of the Service Plan that this Linux App Service will be created in.
   EOD
-  type = string
+  type        = string
 }
 
 variable "site_config" {
@@ -73,22 +73,22 @@ variable "site_config" {
   type = object({
     always_on = optional(bool)
     application_stack = optional(object({
-      docker_image_name = optional(string)
-      docker_registry_url = optional(string)
+      docker_image_name        = optional(string)
+      docker_registry_url      = optional(string)
       docker_registry_username = optional(string)
       docker_registry_password = optional(string)
-      dotnet_version = optional(string)
-      go_version = optional(string)
-      java_server = optional(string)
-      java_server_version = optional(string)
-      java_version = optional(string)
-      node_version = optional(string)
-      php_version = optional(string)
-      python_version = optional(string)
-      ruby_version = optional(string)
+      dotnet_version           = optional(string)
+      go_version               = optional(string)
+      java_server              = optional(string)
+      java_server_version      = optional(string)
+      java_version             = optional(string)
+      node_version             = optional(string)
+      php_version              = optional(string)
+      python_version           = optional(string)
+      ruby_version             = optional(string)
     }))
     container_registry_use_managed_identity = optional(bool)
-    vnet_route_all_enabled = optional(bool)
+    vnet_route_all_enabled                  = optional(bool)
   })
 }
 
@@ -96,8 +96,8 @@ variable "app_settings" {
   description = <<EOD
     (Optional) A map of key-value pairs of App Settings.
   EOD
-  default = null
-  type = map(string)
+  default     = null
+  type        = map(string)
 }
 
 variable "connection_strings" {
@@ -109,10 +109,10 @@ variable "connection_strings" {
       Possible values include: MySQL, SQLServer, SQLAzure, Custom, NotificationHub, ServiceBus, EventHub, APIHub, DocDb, RedisCache, and PostgreSQL.
     - value - (Required) The connection string value.
   EOD
-  default = {}
+  default     = {}
   type = map(object({
-    name = string
-    type = string
+    name  = string
+    type  = string
     value = string
   }))
 }
@@ -121,8 +121,8 @@ variable "https_only" {
   description = <<EOD
     (Optional) Should the Linux Web App require HTTPS connections.
   EOD
-  default = null
-  type = bool
+  default     = null
+  type        = bool
 }
 
 variable "'public_network_access_enabled'" {
@@ -130,8 +130,8 @@ variable "'public_network_access_enabled'" {
     Should public network access be enabled for the Web App.
     Defaults to true.
   EOD
-  default = null
-  type = bool
+  default     = null
+  type        = bool
 }
 
 variable "identity" {
@@ -143,9 +143,9 @@ variable "identity" {
     - identity_ids - (Optional) A list of User Assigned Managed Identity IDs to be assigned to this Linux Web App.
       NOTE: This is required when type is set to UserAssigned or SystemAssigned, UserAssigned.
   EOD
-  default = null
+  default     = null
   type = object({
-    type = string
+    type         = string
     identity_ids = optional(set(string))
   })
 }
@@ -180,26 +180,26 @@ variable "logs" {
         - retention_in_days - (Required) The retention period in days. A value of 0 means no retention.
         - retention_in_mb - (Required) The maximum size in megabytes that log files can use.
   EOD
-  default = null
+  default     = null
   type = object({
     application_logs = optional(object({
       azure_blob_storage = optional(object({
-        level = string
+        level             = string
         retention_in_days = number
-        sas_url = string
+        sas_url           = string
       }))
       file_system_level = string
     }))
     detailed_error_messages = optional(bool)
-    failed_request_tracing = optional(bool)
+    failed_request_tracing  = optional(bool)
     http_logs = optional(object({
       azure_blob_storage = optional(object({
         retention_in_days = number
-        sas_url = string
+        sas_url           = string
       }))
       file_system = optional(object({
         retention_in_days = number
-        retention_in_mb = number
+        retention_in_mb   = number
       }))
     }))
   })
@@ -211,14 +211,14 @@ variable "virtual_network_subnet_id" {
     NOTE on regional virtual network integration: The AzureRM Terraform provider provides regional virtual network integration via the standalone resource app_service_virtual_network_swift_connection and in-line within this resource using the virtual_network_subnet_id property. You cannot use both methods simultaneously. If the virtual network is set via the resource app_service_virtual_network_swift_connection (https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_service_virtual_network_swift_connection) then ignore_changes should be used in the web app configuration.
     Note: Assigning the virtual_network_subnet_id property requires RBAC permissions on the subnet as described at https://docs.microsoft.com/en-us/azure/app-service/overview-vnet-integration#permissions.
   EOD
-  default = null
-  type = string
+  default     = null
+  type        = string
 }
 
 variable "tags" {
   description = <<EOD
     (Optional) A mapping of tags which should be assigned to the Linux Web App.
   EOD
-  default = null
-  type = map(string)
+  default     = null
+  type        = map(string)
 }
