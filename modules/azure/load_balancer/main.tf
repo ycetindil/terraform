@@ -1,11 +1,3 @@
-data "azurerm_subnet" "subnets" {
-  for_each = var.frontend_ip_configurations
-
-  name                 = each.value.subnet.name
-  virtual_network_name = each.value.subnet.virtual_network_name
-  resource_group_name  = each.value.subnet.resource_group_name
-}
-
 resource "azurerm_lb" "lb" {
   name                = var.name
   resource_group_name = var.resource_group_name
@@ -55,16 +47,6 @@ resource "azurerm_lb_rule" "lb_rules" {
   depends_on = [
     azurerm_lb_backend_address_pool.lb_backend_address_pools
   ]
-}
-
-data "azurerm_client_config" "client_config" {}
-
-data "azurerm_subnet" "subnets_pls" {
-  for_each = var.private_link_service.nat_ip_configurations
-
-  name                 = each.value.subnet.name
-  virtual_network_name = each.value.subnet.virtual_network_name
-  resource_group_name  = each.value.subnet.resource_group_name
 }
 
 resource "azurerm_private_link_service" "private_link_service" {
