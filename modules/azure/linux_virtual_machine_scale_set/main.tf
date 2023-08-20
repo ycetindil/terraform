@@ -3,7 +3,7 @@
 # NOTE: All arguments including the administrator login and password will be stored in the raw state as plain-text. Read more about sensitive data in state at https://www.terraform.io/docs/state/sensitive-data.html.
 # NOTE: Terraform will automatically update & reimage the nodes in the Scale Set (if Required) during an Update - this behaviour can be configured using the features setting within the Provider block as described at https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#features.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set
-resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
+resource "azurerm_linux_virtual_machine_scale_set" "linux_virtual_machine_scale_set" {
   name                = var.name
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -15,53 +15,51 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     for_each = var.network_interfaces
 
     content {
-      name                      = network_interface.value.name
+      name = network_interface.value.name
 
       dynamic "ip_configuration" {
         for_each = network_interface.value.ip_configurations
 
         content {
-          name      = ip_configuration.value.name
-          application_gateway_backend_address_pool_ids = [
-            
-          ]
-          application_security_group_ids = ip_configuration.value.application_security_group_ids
-          load_balancer_backend_address_pool_ids = ???
-          load_balancer_inbound_nat_rules_ids = ???
-          primary   = ip_configuration.value.primary
+          name                                         = ip_configuration.value.name
+          application_gateway_backend_address_pool_ids = ip_configuration.value.application_gateway_backend_address_pool_ids
+          application_security_group_ids               = ip_configuration.value.application_security_group_ids
+          load_balancer_backend_address_pool_ids       = ip_configuration.value.load_balancer_backend_address_pool_ids
+          load_balancer_inbound_nat_rules_ids          = ip_configuration.value.load_balancer_inbound_nat_rules_ids
+          primary                                      = ip_configuration.value.primary
 
           dynamic "public_ip_address" {
             for_each = ip_configuration.value.public_ip_address != null ? [1] : []
 
             content {
-              name = ip_configuration.value.public_ip_address.name
-              domain_name_label = ip_configuration.value.public_ip_address.domain_name_label
+              name                    = ip_configuration.value.public_ip_address.name
+              domain_name_label       = ip_configuration.value.public_ip_address.domain_name_label
               idle_timeout_in_minutes = ip_configuration.value.public_ip_address.idle_timeout_in_minutes
 
               dynamic "ip_tag" {
                 for_each = ip_configuration.value.public_ip_address.ip_tags
 
                 content {
-                  tag = ip_tag.value.tag
+                  tag  = ip_tag.value.tag
                   type = ip_tag.value.type
                 }
               }
 
               public_ip_prefix_id = public_ip_address.value.public_ip_prefix_id
-              version = public_ip_address.value.version
+              version             = public_ip_address.value.version
             }
           }
 
-          subnet_id = ???
-          version = ip_configuration.value.version
+          subnet_id = ip_configuration.value.subnet_id
+          version   = ip_configuration.value.version
         }
       }
 
-      dns_servers = network_interface.value.dns_servers
+      dns_servers                   = network_interface.value.dns_servers
       enable_accelerated_networking = network_interface.value.enable_accelerated_networking
-      enable_ip_forwarding = network_interface.value.enable_ip_forwarding
-      network_security_group_id = ???
-      primary                   = network_interface.value.primary
+      enable_ip_forwarding          = network_interface.value.enable_ip_forwarding
+      network_security_group_id     = network_interface.value.network_security_group_id
+      primary                       = network_interface.value.primary
     }
   }
 
@@ -73,16 +71,16 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
       for_each = var.os_disk.diff_disk_settings != null ? [1] : []
 
       content {
-        option = var.os_disk.diff_disk_settings.option
+        option    = var.os_disk.diff_disk_settings.option
         placement = var.os_disk.diff_disk_settings.placement
       }
     }
 
-    disk_encryption_set_id = var.os_disk.disk_encryption_set_id
-    disk_size_gb = var.os_disk.disk_size_gb
+    disk_encryption_set_id           = var.os_disk.disk_encryption_set_id
+    disk_size_gb                     = var.os_disk.disk_size_gb
     secure_vm_disk_encryption_set_id = var.os_disk.secure_vm_disk_encryption_set_id
-    security_encryption_type = var.os_disk.security_encryption_type
-    write_accelerator_enabled = var.os_disk.write_accelerator_enabled
+    security_encryption_type         = var.os_disk.security_encryption_type
+    write_accelerator_enabled        = var.os_disk.write_accelerator_enabled
   }
 
   admin_password = var.admin_password
@@ -91,12 +89,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     for_each = var.admin_ssh_keys
 
     content {
-      public_key = try(
-        data.azurerm_ssh_public_key.admin_ssh_keys_from_azure[admin_ssh_key.key].public_key,
-        file(admin_ssh_key.value.public_key.from_local_computer.path),
-        "'try' function could not find a valid 'public_key' for the 'admin_ssh_key': ${admin_ssh_key.key} of the 'vmss': ${var.name}!"
-      )
-      username = admin_ssh_key.value.username
+      public_key = admin_ssh_key.value.public_key
+      username   = admin_ssh_key.value.username
     }
   }
 
@@ -108,16 +102,16 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     }
   }
 
-  custom_data = var.custom_data
+  custom_data                     = var.custom_data
   disable_password_authentication = var.disable_password_authentication
-  health_probe_id     = ???
+  health_probe_id                 = var.health_probe_id
 
   dynamic "identity" {
     for_each = var.identity != null ? [1] : [0]
 
     content {
       type         = var.identity.type
-      identity_ids = try(data.azurerm_user_assigned_identity.user_assigned_identities[*].id, null)
+      identity_ids = var.identity.identity_ids
     }
   }
 
@@ -125,16 +119,16 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     for_each = lower(var.upgrade_mode) == "rolling" ? [1] : []
 
     content {
-      cross_zone_upgrades_enabled = var.rolling_upgrade_policy.cross_zone_upgrades_enabled
+      cross_zone_upgrades_enabled             = var.rolling_upgrade_policy.cross_zone_upgrades_enabled
       max_batch_instance_percent              = var.rolling_upgrade_policy.max_batch_instance_percent
       max_unhealthy_instance_percent          = var.rolling_upgrade_policy.max_unhealthy_instance_percent
       max_unhealthy_upgraded_instance_percent = var.rolling_upgrade_policy.max_unhealthy_upgraded_instance_percent
       pause_time_between_batches              = var.rolling_upgrade_policy.pause_time_between_batches
-      prioritize_unhealthy_instances_enabled = var.rolling_upgrade_policy.prioritize_unhealthy_instances_enabled
+      prioritize_unhealthy_instances_enabled  = var.rolling_upgrade_policy.prioritize_unhealthy_instances_enabled
     }
   }
 
-  source_image_id     = try(data.azurerm_shared_image.source_image[0].id, null)
+  source_image_id = var.source_image_id
 
   dynamic "source_image_reference" {
     for_each = var.source_image_reference != null ? [1] : []
@@ -147,6 +141,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     }
   }
 
-  tags = var.tags
-  upgrade_mode        = var.upgrade_mode
+  tags         = var.tags
+  upgrade_mode = var.upgrade_mode
 }

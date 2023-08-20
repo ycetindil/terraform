@@ -57,23 +57,10 @@ variable "network_interfaces" {
       An ip_configuration block supports the following:
       - name - (Required) The Name which should be used for this IP Configuration.
       - application_gateway_backend_address_pool_ids - (Optional) A list of Backend Address Pools ID's from a Application Gateway which this Virtual Machine Scale Set should be connected to.
-        IMPORTANT: Procured by the module by collecting these existing application_gateway_backend_address_pool data:
-        - name - (Required) The Name of the Backend Address Pool.
-        - application_gateway - (Required) This block supports the following:
-          - name - (Required) The Name of the Application Gateway of the Backend Address Pool.
-          - resource_group_name - (Required) The Name of the Resource Group of the Application Gateway of the Backend Address Pool.
       - application_security_group_ids - (Optional) A list of Application Security Group ID's which this Virtual Machine Scale Set should be connected to.
-        IMPORTANT: Procured by the module by collecting these existing application_security_group data:
-        - name - (Required) The Name of the Application Security Group.
-        - resource_group_name - (Required) The Name of the Resource Group of the Application Security Group.
       - load_balancer_backend_address_pool_ids - (Optional) A list of Backend Address Pools ID's from a Load Balancer which this Virtual Machine Scale Set should be connected to.
         NOTE: When the Virtual Machine Scale Set is configured to have public IPs per instance are created with a load balancer, the SKU of the Virtual Machine instance IPs is determined by the SKU of the Virtual Machine Scale Sets Load Balancer (e.g. Basic or Standard). Alternatively, you may use the public_ip_prefix_id field to generate instance-level IPs in a virtual machine scale set as well. The zonal properties of the prefix will be passed to the Virtual Machine instance IPs, though they will not be shown in the output. To view the public IP addresses assigned to the Virtual Machine Scale Sets Virtual Machine instances use the az vmss list-instance-public-ips --resource-group ResourceGroupName --name VirtualMachineScaleSetName CLI command.
         NOTE: When using this field you'll also need to configure a Rule for the Load Balancer, and use a depends_on between this resource and the Load Balancer Rule.
-        IMPORTANT: Procured by the module by collecting these existing load_balancer_backend_address_pool data:
-        - name - (Required) The Name of the Backend Address Pool.
-        - load_balancer - (Required) This block supports the following:
-          - name - (Required) The Name of the Load Balancer of the Backend Address Pool.
-          - resource_group_name - (Required) The Name of the Resource Group of the Load Balancer of the Backend Address Pool.
       - load_balancer_inbound_nat_rules_ids - (Optional) A list of NAT Rule ID's from a Load Balancer which this Virtual Machine Scale Set should be connected to.
         NOTE: When using this field you'll also need to configure a Rule for the Load Balancer, and use a depends_on between this resource and the Load Balancer Rule.
       - primary - (Optional) Is this the Primary IP Configuration for this Network Interface?
@@ -101,10 +88,6 @@ variable "network_interfaces" {
           Changing this forces a new resource to be created.
       - subnet_id - (Optional) The ID of the Subnet which this IP Configuration should be connected to.
         NOTE: subnet_id is required if version is set to IPv4.
-        IMPORTANT: Procured by the module by collecting these existing subnet data:
-        - name - (Required) The Name of the Subnet.
-        - virtual_network_name - (Required) The Name of the Virtual Network of the Subnet.
-        - resource_group_name - (Required) The Name of the Resource Group of the Subnet.
       - version - (Optional) The Internet Protocol Version which should be used for this IP Configuration.
         Possible values are IPv4 and IPv6.
         Defaults to IPv4.
@@ -114,62 +97,37 @@ variable "network_interfaces" {
     - enable_ip_forwarding - (Optional) Does this Network Interface support IP Forwarding?
       Defaults to false.
     - network_security_group_id - (Optional) The ID of a Network Security Group which should be assigned to this Network Interface.
-      IMPORTANT: Procured by the module by collecting these existing network_security_group data:
-      - name - (Required) The Name of the Network Security Group.
-      - resource_group_name - (Required) The Name of the Resource Group of the Network Security Group.
     - primary - (Optional) Is this the Primary IP Configuration?
       NOTE: If multiple network_interface blocks are specified, one must be set to primary.
   EOD
   type = map(object({
     name = string
     ip_configurations = map(object({
-      name = string
-      application_gateway_backend_address_pools = optional(map(object({
-        name = string
-        application_gateway = object({
-          name                = string
-          resource_group_name = string
-        })
-      })), null)
-      application_security_groups = optional(map(object({
-        name                = string
-        resource_group_name = string
-      })), null)
-      load_balancer_backend_address_pools = optional(map(object({
-        name = string
-        load_balancer = object({
-          name                = string
-          resource_group_name = string
-        })
-      })), null)
-      load_balancer_inbound_nat_rules_ids = optional(list(string), null)
-      primary                             = optional(bool, null)
+      name                                         = string
+      application_gateway_backend_address_pool_ids = optional(set(string))
+      application_security_group_ids               = optional(set(string))
+      load_balancer_backend_address_pool_ids       = optional(set(string))
+      load_balancer_inbound_nat_rules_ids          = optional(set(string))
+      primary                                      = optional(bool)
       public_ip_address = optional(object({
         name                    = string
-        domain_name_label       = optional(string, null)
-        idle_timeout_in_minutes = optional(number, null)
+        domain_name_label       = optional(string)
+        idle_timeout_in_minutes = optional(number)
         ip_tags = optional(map(object({
           tag  = string
           type = string
         })), {})
-        public_ip_prefix_id = optional(string, null)
-        version             = optional(string, null)
-      }), null)
-      subnet = optional(object({
-        name                 = string
-        virtual_network_name = string
-        resource_group_name  = string
-      }), null)
-      version = optional(string, null)
+        public_ip_prefix_id = optional(string)
+        version             = optional(string)
+      }))
+      subnet_id = optional(string)
+      version   = optional(string)
     }))
-    dns_servers                   = optional(list(string), null)
-    enable_accelerated_networking = optional(bool, null)
-    enable_ip_forwarding          = optional(bool, null)
-    network_security_group = optional(object({
-      name                = string
-      resource_group_name = string
-    }), null)
-    primary = optional(bool, null)
+    dns_servers                   = optional(list(string))
+    enable_accelerated_networking = optional(bool)
+    enable_ip_forwarding          = optional(bool)
+    network_security_group_id     = optional(string)
+    primary                       = optional(bool)
   }))
 }
 
@@ -217,13 +175,13 @@ variable "os_disk" {
     storage_account_type = string
     diff_disk_settings = optional(object({
       option    = string
-      placement = optional(string, null)
-    }), null)
-    disk_encryption_set_id           = optional(string, null)
-    disk_size_gb                     = optional(number, null)
-    secure_vm_disk_encryption_set_id = optional(string, null)
-    security_encryption_type         = optional(string, null)
-    write_accelerator_enabled        = optional(bool, null)
+      placement = optional(string)
+    }))
+    disk_encryption_set_id           = optional(string)
+    disk_size_gb                     = optional(number)
+    secure_vm_disk_encryption_set_id = optional(string)
+    security_encryption_type         = optional(string)
+    write_accelerator_enabled        = optional(bool)
   })
 }
 
@@ -249,16 +207,8 @@ variable "admin_ssh_keys" {
   EOD
   default     = {}
   type = map(object({
-    public_key = object({
-      from_azure = optional(object({
-        name                = string
-        resource_group_name = string
-      }), null)
-      from_local_computer = optional(object({
-        path = string
-      }), null)
-    })
-    username = string
+    public_key = string
+    username   = string
   }))
 }
 
@@ -271,7 +221,7 @@ variable "boot_diagnostics" {
   EOD
   default     = null
   type = object({
-    storage_account_uri = optional(string, null)
+    storage_account_uri = optional(string)
   })
 }
 
@@ -303,17 +253,11 @@ variable "identity" {
       Possible values are SystemAssigned, UserAssigned, SystemAssigned, UserAssigned (to enable both).
     - identity_ids - (Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Linux Virtual Machine Scale Set.
       NOTE: This is required when type is set to UserAssigned or "SystemAssigned, UserAssigned".
-      IMPORTANT: Procured by the module by collecting these existing user_assigned_identities data:
-      - name - (Required) The Name of the User Assigned Identity.
-      - resource_group_name - (Required) The Name of the Resource Group of the User Assigned Identity.
   EOD
   default     = null
   type = object({
-    type = string
-    user_assigned_identities = optional(list(object({
-      name                = string
-      resource_group_name = string
-    })), null)
+    type         = string
+    identity_ids = optional(set(string))
   })
 }
 
@@ -335,32 +279,23 @@ variable "rolling_upgrade_policy" {
   EOD
   default     = null
   type = object({
-    cross_zone_upgrades_enabled             = optional(bool, null)
+    cross_zone_upgrades_enabled             = optional(bool)
     max_batch_instance_percent              = number
     max_unhealthy_instance_percent          = number
     max_unhealthy_upgraded_instance_percent = number
     pause_time_between_batches              = string
-    prioritize_unhealthy_instances_enabled  = optional(bool, null)
+    prioritize_unhealthy_instances_enabled  = optional(bool)
   })
 }
 
-variable "source_image" {
+variable "source_image_id" {
   description = <<EOD
     (Optional) The ID of an Image which each Virtual Machine in this Scale Set should be based on.
     Possible Image ID types include Image IDs, Shared Image IDs, Shared Image Version IDs, Community Gallery Image IDs, Community Gallery Image Version IDs, Shared Gallery Image IDs and Shared Gallery Image Version IDs.
     NOTE: One of either source_image_id or source_image_reference must be set.
-    - shared_image - (Optional) supports the following:
-      - name - (Required) The name of the Shared Image.
-      - gallery_name - (Required) The name of the Shared Image Gallery in which the Shared Image exists.
-      - resource_group_name - (Required) The name of the Resource Group in which the Shared Image Gallery exists.
   EOD
-  type = object({
-    shared_image = optional(object({
-      name                = string
-      gallery_name        = string
-      resource_group_name = string
-    }))
-  })
+  default     = null
+  type        = string
 }
 
 variable "source_image_reference" {
@@ -399,5 +334,6 @@ variable "upgrade_mode" {
     Defaults to Manual.
     Changing this forces a new resource to be created.
   EOD
+  default     = null
   type        = string
 }

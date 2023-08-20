@@ -5,9 +5,9 @@
 # NOTE: This resource does not support attaching existing OS Disks. You can instead capture an image of the OS Disk or continue to use the azurerm_virtual_machine resource instead.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine
 resource "azurerm_linux_virtual_machine" "vm" {
-  admin_username = var.admin_username
-  location       = var.location
-  name           = var.name
+  admin_username        = var.admin_username
+  location              = var.location
+  name                  = var.name
   network_interface_ids = var.network_interface_ids
 
   os_disk {
@@ -24,7 +24,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     for_each = var.admin_ssh_keys
 
     content {
-      username = admin_ssh_key.value.username
+      username   = admin_ssh_key.value.username
       public_key = admin_ssh_key.value.public_key
     }
   }

@@ -27,7 +27,7 @@ variable "network_interface_ids" {
     (Required) A list of Network Interface IDs which should be attached to this Virtual Machine.
     The first Network Interface ID in this list will be the Primary Network Interface on the Virtual Machine.
   EOD
-  type = list(string)
+  type        = list(string)
 }
 
 variable "os_disk" {
@@ -90,7 +90,7 @@ variable "admin_ssh_keys" {
   default     = {}
   type = map(object({
     public_key = string
-    username = string
+    username   = string
   }))
 }
 
@@ -139,7 +139,7 @@ variable "identity" {
   EOD
   default     = null
   type = object({
-    type = string
+    type         = string
     identity_ids = optional(list(string))
   })
 }
