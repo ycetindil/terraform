@@ -22,17 +22,12 @@ variable "name" {
   type        = string
 }
 
-variable "network_interfaces" {
+variable "network_interface_ids" {
   description = <<EOD
-    (Optional) A map of zero or more blocks supports the following:
-    - name (Required) - Specifies the name of the Network Interface.
-    - resource_group_name (Required) - Specifies the name of the resource group the Network Interface is located in.
+    (Required) A list of Network Interface IDs which should be attached to this Virtual Machine.
+    The first Network Interface ID in this list will be the Primary Network Interface on the Virtual Machine.
   EOD
-  default     = {}
-  type = map(object({
-    name                = string
-    resource_group_name = string
-  }))
+  type = list(string)
 }
 
 variable "os_disk" {
@@ -82,26 +77,20 @@ variable "admin_password" {
 
 variable "admin_ssh_keys" {
   description = <<EOD
-    (Optional) A map of zero or more admin_ssh_keys supports the following:
+    (Optional) One or more admin_ssh_key blocks as defined below.
+    Changing this forces a new resource to be created.
     NOTE: One of either admin_password or admin_ssh_key must be specified.
-    - username - (Required) The Username for which this Public SSH Key should be configured.
-      Changing this forces a new resource to be created.
+    A admin_ssh_key block supports the following:
     - public_key - (Required) The Public Key which should be used for authentication, which needs to be at least 2048-bit and in ssh-rsa format.
+      Changing this forces a new resource to be created.
+    - username - (Required) The Username for which this Public SSH Key should be configured.
       Changing this forces a new resource to be created.
     NOTE: The Azure VM Agent only allows creating SSH Keys at the path /home/{username}/.ssh/authorized_keys - as such this public key will be written to the authorized keys file.
   EOD
   default     = {}
   type = map(object({
+    public_key = string
     username = string
-    public_key = object({
-      from_azure = optional(object({
-        name                = string
-        resource_group_name = string
-      }), null)
-      from_local_computer = optional(object({
-        path = string
-      }), null)
-    })
   }))
 }
 
@@ -147,17 +136,11 @@ variable "identity" {
       Possible values are SystemAssigned, UserAssigned, "SystemAssigned, UserAssigned" (to enable both).
     - identity_ids - (Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Linux Virtual Machine.
       NOTE: This is required when type is set to UserAssigned or "SystemAssigned, UserAssigned".
-      IMPORTANT: Procured by the module by collecting these existing user_assigned_identities data:
-      - name - (Required) The Name of the User Assigned Identity.
-      - resource_group_name - (Required) The Name of the Resource Group of the User Assigned Identity.
   EOD
   default     = null
   type = object({
     type = string
-    user_assigned_identities = optional(list(object({
-      name                = string
-      resource_group_name = string
-    })), null)
+    identity_ids = optional(list(string))
   })
 }
 

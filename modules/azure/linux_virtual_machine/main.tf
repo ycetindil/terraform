@@ -8,10 +8,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   admin_username = var.admin_username
   location       = var.location
   name           = var.name
-  network_interface_ids = [
-    for key, interface in var.network_interfaces :
-    data.azurerm_network_interface.network_interfaces[key].id
-  ]
+  network_interface_ids = var.network_interface_ids
 
   os_disk {
     name                 = var.os_disk.name != null ? var.os_disk.name : "${var.name}-os-disk"
@@ -28,11 +25,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
     content {
       username = admin_ssh_key.value.username
-      public_key = try(
-        data.azurerm_ssh_public_key.admin_ssh_keys_from_azure[admin_ssh_key.key].public_key,
-        file(admin_ssh_key.value.public_key.from_local_computer.path),
-        "'try' function could not find a valid 'public_key' for the 'admin_ssh_key': ${admin_ssh_key.key} of the 'vm': ${var.name}!"
-      )
+      public_key = admin_ssh_key.value.public_key
     }
   }
 
@@ -52,7 +45,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
     content {
       type         = var.identity.type
-      identity_ids = try(data.azurerm_user_assigned_identity.user_assigned_identities[*].id, null)
+      identity_ids = var.identity.identity_ids
     }
   }
 
