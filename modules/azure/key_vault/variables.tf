@@ -36,7 +36,7 @@ variable "tenant_id" {
   description = <<EOD
     (Required) The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
   EOD
-  type = string
+  type        = string
 }
 
 variable "tags" {

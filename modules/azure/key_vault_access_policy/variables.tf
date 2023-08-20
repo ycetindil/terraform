@@ -2,7 +2,7 @@ variable "key_vault_id" {
   description = <<EOD
     (Required) Specifies the id of the Key Vault resource. Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "tenant_id" {
@@ -10,7 +10,7 @@ variable "tenant_id" {
     (Required) The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
     Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "object_id" {
@@ -20,7 +20,7 @@ variable "object_id" {
     The object ID must be unique for the list of access policies.
     Changing this forces a new resource to be created.
   EOD
-  type = string
+  type        = string
 }
 
 variable "certificate_permissions" {
