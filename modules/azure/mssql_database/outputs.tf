@@ -1,7 +1,9 @@
 output "id" {
-  value = azurerm_mssql_database.mssql_database.id
+  description = "The ID of the MS SQL Database."
+  value       = azurerm_mssql_database.mssql_database.id
 }
 
 output "name" {
-  value = azurerm_mssql_database.mssql_database.name
+  description = "The Name of the MS SQL Database."
+  value       = azurerm_mssql_database.mssql_database.name
 }
