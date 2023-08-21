@@ -1,15 +1,11 @@
 variable "ip_configurations" {
   description = <<EOD
-    (Required) One or more ip_configuration blocks as defined below.
+		(Required) One or more ip_configuration blocks as defined below.
     The ip_configuration block supports the following:
     - name - (Required) A name used for this IP Configuration.
     - gateway_load_balancer_frontend_ip_configuration_id - (Optional) The Frontend IP Configuration ID of a Gateway SKU Load Balancer.
     - subnet_id - (Optional) The ID of the Subnet where this Network Interface should be located in.
       NOTE: This is required when private_ip_address_version is set to IPv4.
-      IMPORTANT: Procured by the module by collecting these existing subnet data:
-      - name - (Required) The Name of the Subnet.
-      - virtual_network_name - (Required) The Name of the Virtual Network of the Subnet.
-      - resource_group_name - (Required) The Name of the Resource Group of the Subnet.
     - private_ip_address_version - (Optional) The IP Version to use.
       Possible values are IPv4 or IPv6.
       Defaults to IPv4.
@@ -17,31 +13,21 @@ variable "ip_configurations" {
       Possible values are Dynamic and Static.
       NOTE: Dynamic means "An IP is automatically assigned during creation of this Network Interface"; Static means "User supplied IP address will be used"
     - public_ip_address_id - (Optional) Reference to a Public IP Address to associate with this NIC.
-      IMPORTANT: Procured by the module by collecting these existing public_ip_address data:
-      - name - (Required) The Name of the Public IP Address.
-      - resource_group_name - (Required) The Name of the Resource Group of the Public IP Address.
     - primary - (Optional) Is this the Primary IP Configuration?
       Must be true for the first ip_configuration when multiple are specified.
       Defaults to false.
     - private_ip_address - (Optional) The Static IP Address which should be used.
       NOTE: This is required when private_ip_address_allocation is set to Static.
-  EOD
+	EOD
   type = map(object({
     name                                               = string
-    gateway_load_balancer_frontend_ip_configuration_id = optional(string, null)
-    subnet = optional(object({
-      name                       = string
-      virtual_network_name       = string
-      subnet_resource_group_name = string
-    }), null)
-    private_ip_address_version    = optional(string, null)
-    private_ip_address_allocation = string
-    public_ip_address = optional(object({
-      name                = string
-      resource_group_name = string
-    }), null)
-    primary            = optional(bool, null)
-    private_ip_address = optional(string, null)
+    gateway_load_balancer_frontend_ip_configuration_id = optional(string)
+    subnet_id                                          = optional(string)
+    private_ip_address_version                         = optional(string)
+    private_ip_address_allocation                      = string
+    public_ip_address_id                               = optional(string)
+    primary                                            = optional(bool)
+    private_ip_address                                 = optional(string)
   }))
 }
 

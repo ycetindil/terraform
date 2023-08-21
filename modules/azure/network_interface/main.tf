@@ -1,30 +1,28 @@
 # Manages a Network Interface.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface
 resource "azurerm_network_interface" "nic" {
-  for_each = var.network_interfaces
-
   dynamic "ip_configuration" {
-    for_each = each.value.ip_configurations
+    for_each = var.ip_configurations
 
     content {
       name                                               = ip_configuration.value.name
       gateway_load_balancer_frontend_ip_configuration_id = ip_configuration.value.gateway_load_balancer_frontend_ip_configuration_id
-      subnet_id                                          = try(data.azurerm_subnet.ip_configuration_subnets[ip_configuration.key].id, null)
+      subnet_id                                          = ip_configuration.value.subnet_id
       private_ip_address_version                         = ip_configuration.value.private_ip_address_version
       private_ip_address_allocation                      = ip_configuration.value.private_ip_address_allocation
-      public_ip_address_id                               = try(data.azurerm_public_ip.ip_configuration_public_ip_addresses[ip_configuration.key].id, null)
+      public_ip_address_id                               = ip_configuration.value.public_ip_address_id
       primary                                            = ip_configuration.value.primary
       private_ip_address                                 = ip_configuration.value.private_ip_address
     }
   }
 
-  location                      = each.value.location
-  name                          = each.value.name
-  resource_group_name           = each.value.resource_group_name
-  dns_servers                   = each.value.dns_servers
-  edge_zone                     = each.value.edge_zone
-  enable_ip_forwarding          = each.value.enable_ip_forwarding
-  enable_accelerated_networking = each.value.enable_accelerated_networking
-  internal_dns_name_label       = each.value.internal_dns_name_label
-  tags                          = each.value.tags
+  location                      = var.location
+  name                          = var.name
+  resource_group_name           = var.resource_group_name
+  dns_servers                   = var.dns_servers
+  edge_zone                     = var.edge_zone
+  enable_ip_forwarding          = var.enable_ip_forwarding
+  enable_accelerated_networking = var.enable_accelerated_networking
+  internal_dns_name_label       = var.internal_dns_name_label
+  tags                          = var.tags
 }
