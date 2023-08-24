@@ -18,9 +18,9 @@ resource "azurerm_route_table" "route_table" {
 data "azurerm_subnet" "subnets" {
   for_each = var.subnet_associations
 
-  name                 = each.value.subnet_name
-  virtual_network_name = each.value.virtual_network_name
-  resource_group_name  = each.value.resource_group_name
+  name                 = var.subnet_name
+  virtual_network_name = var.virtual_network_name
+  resource_group_name  = var.resource_group_name
 }
 
 resource "azurerm_subnet_route_table_association" "example" {

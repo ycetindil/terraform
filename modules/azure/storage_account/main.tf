@@ -10,7 +10,7 @@ resource "azurerm_storage_account" "storage_account" {
 resource "azurerm_storage_container" "storage_containers" {
   for_each = var.containers
 
-  name                  = each.value.name
+  name                  = var.name
   storage_account_name  = azurerm_storage_account.storage_account.name
-  container_access_type = each.value.container_access_type
+  container_access_type = var.container_access_type
 }

@@ -1,6 +1,6 @@
 # Manages a Network Interface.
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface
-resource "azurerm_network_interface" "nic" {
+resource "azurerm_network_interface" "network_interface" {
   dynamic "ip_configuration" {
     for_each = var.ip_configurations
 

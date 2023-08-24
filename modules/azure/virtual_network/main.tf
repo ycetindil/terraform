@@ -9,12 +9,12 @@ module "subnets" {
   source   = "../subnet"
   for_each = var.subnets
 
-  name = each.value.name
+  name = var.name
   virtual_network = {
     name                = azurerm_virtual_network.virtual_network.name
     resource_group_name = azurerm_virtual_network.virtual_network.resource_group_name
   }
-  address_prefixes                              = each.value.address_prefixes
-  private_link_service_network_policies_enabled = try(each.value.private_link_service_network_policies_enabled, null)
-  delegation                                    = try(each.value.delegation, null)
+  address_prefixes                              = var.address_prefixes
+  private_link_service_network_policies_enabled = try(var.private_link_service_network_policies_enabled, null)
+  delegation                                    = try(var.delegation, null)
 }

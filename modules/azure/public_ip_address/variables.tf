@@ -1,19 +1,44 @@
 variable "name" {
-  type = string
-}
-
-variable "location" {
-  type = string
+  description = <<EOD
+		(Required) Specifies the name of the Public IP.
+		Changing this forces a new Public IP to be created.
+	EOD
+  type        = string
 }
 
 variable "resource_group_name" {
-  type = string
+  description = <<EOD
+		(Required) The name of the Resource Group where this Public IP should exist.
+		Changing this forces a new Public IP to be created.
+	EOD
+  type        = string
+}
+
+variable "location" {
+  description = <<EOD
+		(Required) Specifies the supported Azure location where the Public IP should exist.
+		Changing this forces a new resource to be created.
+	EOD
+  type        = string
 }
 
 variable "allocation_method" {
-  type = string
+  description = <<EOD
+		(Required) Defines the allocation method for this IP address.
+		Possible values are Static or Dynamic.
+		Note: Dynamic Public IP Addresses aren't allocated until they're assigned to a resource (such as a Virtual Machine or a Load Balancer) by design within Azure. See ip_address argument.
+	EOD
+  type        = string
 }
 
 variable "sku" {
-  type = string
+  description = <<EOD
+		(Optional) The SKU of the Public IP.
+		Accepted values are Basic and Standard.
+		Defaults to Basic.
+		Changing this forces a new resource to be created.
+		Note: Public IP Standard SKUs require allocation_method to be set to Static.
+	EOD
+  default     = null
+  type        = string
 }

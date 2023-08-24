@@ -1,59 +1,35 @@
-data "azurerm_subnet" "subnet" {
-  name                 = var.subnet.name
-  resource_group_name  = var.subnet.resource_group_name
-  virtual_network_name = var.subnet.virtual_network_name
-}
-
-# This block is going to give us an object.
-# We need to access its attribute 'resources's first element when calling.
-data "azurerm_resources" "attached_resource" {
-  type                = var.attached_resource.type
-  required_tags       = var.attached_resource.required_tags
-  name                = var.attached_resource.name
-  resource_group_name = var.attached_resource.resource_group_name
-}
-
-# This block will give an object of which attributes are private DNS zone names.
-# Values will be private DNS zone data's regular output.
-# Hence we need to create a for loop when calling later to access each of their ids.
-data "azurerm_private_dns_zone" "private_dns_zones" {
-  for_each = {
-    for zone in var.private_dns_zone_group.private_dns_zones :
-    zone.name => {
-      name                = zone.name
-      resource_group_name = zone.resource_group_name
-    }
-  }
-
-  name                = each.value.name
-  resource_group_name = each.value.resource_group_name
-}
-
+# Manages a Private Endpoint.
+# Azure Private Endpoint is a network interface that connects you privately and securely to a service powered by Azure Private Link. Private Endpoint uses a private IP address from your VNet, effectively bringing the service into your VNet. The service could be an Azure service such as Azure Storage, SQL, etc. or your own Private Link Service.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint
 resource "azurerm_private_endpoint" "private_endpoint" {
-  name                = var.name
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  subnet_id           = data.azurerm_subnet.subnet.id
-
-  private_service_connection {
-    name                           = var.private_service_connection.name != null ? var.private_service_connection.name : "${var.name}-private-service-connection"
-    private_connection_resource_id = data.azurerm_resources.attached_resource.resources[0].id
-    is_manual_connection           = var.private_service_connection.is_manual_connection
-    subresource_names              = var.private_service_connection.subresource_names
-  }
+  name                          = var.name
+  resource_group_name           = var.resource_group_name
+  location                      = var.location
+  subnet_id                     = var.subnet_id
+  custom_network_interface_name = var.custom_network_interface_name
 
   private_dns_zone_group {
-    name = var.private_dns_zone_group.name != null ? var.private_dns_zone_group.name : "${var.name}-private-dns-zone-group"
-    private_dns_zone_ids = [
-      for k, zone in data.azurerm_private_dns_zone.private_dns_zones : zone.id
-    ]
+    name                 = var.private_dns_zone_group.name
+    private_dns_zone_ids = var.private_dns_zone_group.private_dns_zone_ids
   }
 
-  lifecycle {
-    ignore_changes = [
-      subnet_id,
-      private_service_connection[0].private_connection_resource_id,
-      private_dns_zone_group[0].private_dns_zone_ids
-    ]
+  private_service_connection {
+    name                              = var.private_service_connection.name
+    is_manual_connection              = var.private_service_connection.is_manual_connection
+    private_connection_resource_id    = var.private_service_connection.private_connection_resource_id
+    private_connection_resource_alias = var.private_service_connection.private_connection_resource_alias
+    subresource_names                 = var.private_service_connection.subresource_names
+    request_message                   = var.private_service_connection.request_message
+  }
+
+  dynamic "ip_configuration" {
+    for_each = var.ip_configurations
+
+    content {
+      name               = ip_configuration.value.name
+      private_ip_address = ip_configuration.value.private_ip_address
+      subresource_name   = ip_configuration.value.subresource_name
+      member_name        = ip_configuration.value.member_name
+    }
   }
 }
