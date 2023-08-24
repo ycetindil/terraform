@@ -1,28 +1,24 @@
-variable "network_groups" {
-  default = null
-  type = map(object({
-    name = string
-    policies = map(object({
-      name = string
-      subscription = object({
-        is_current = bool
-        id         = optional(string, "")
-      })
-      rule = object({
-        effect     = string
-        conditions = string
-      })
-    }))
-    connectivity_configurations = map(object({
-      name                  = string
-      connectivity_topology = string
-      applies_to_group = object({
-        group_connectivity = string
-      })
-      deployment = object({
-        location     = string
-        scope_access = string
-      })
-    }))
-  }))
+variable "name" {
+  description = <<EOD
+		 - (Required) The name which should be used for this Policy Assignment.
+		Changing this forces a new Policy Assignment to be created.
+		Cannot exceed 64 characters in length.
+	EOD
+  type        = string
+}
+
+variable "policy_definition_id" {
+  description = <<EOD
+		 - (Required) The ID of the Policy Definition or Policy Definition Set.
+		Changing this forces a new Policy Assignment to be created.
+	EOD
+  type        = string
+}
+
+variable "subscription_id" {
+  description = <<EOD
+		 - (Required) The ID of the Subscription where this Policy Assignment should be created.
+		Changing this forces a new Policy Assignment to be created.
+	EOD
+  type        = string
 }
