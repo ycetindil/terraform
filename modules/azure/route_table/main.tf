@@ -1,31 +1,10 @@
+# Manages a Route Table
+# NOTE on Route Tables and Routes: Terraform currently provides both a standalone Route resource, and allows for Routes to be defined in-line within the Route Table resource. At this time you cannot use a Route Table with in-line Routes in conjunction with any Route resources. Doing so will cause a conflict of Route configurations and will overwrite Routes.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/route_table
 resource "azurerm_route_table" "route_table" {
-  name                = var.name
-  location            = var.location
-  resource_group_name = var.resource_group_name
-
-  dynamic "route" {
-    for_each = var.routes
-
-    content {
-      name                   = route.key
-      address_prefix         = route.value.address_prefix
-      next_hop_type          = route.value.next_hop_type
-      next_hop_in_ip_address = route.value.next_hop_in_ip_address
-    }
-  }
-}
-
-data "azurerm_subnet" "subnets" {
-  for_each = var.subnet_associations
-
-  name                 = var.subnet_name
-  virtual_network_name = var.virtual_network_name
-  resource_group_name  = var.resource_group_name
-}
-
-resource "azurerm_subnet_route_table_association" "example" {
-  for_each = var.subnet_associations
-
-  route_table_id = azurerm_route_table.route_table.id
-  subnet_id      = data.azurerm_subnet.subnets[each.key].id
+  name                          = var.name
+  resource_group_name           = var.resource_group_name
+  location                      = var.location
+  disable_bgp_route_propagation = var.disable_bgp_route_propagation
+  tags                          = var.tags
 }
