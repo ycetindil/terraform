@@ -1,67 +1,45 @@
+variable "name" {
+  description = <<EOD
+		(Optional) A unique UUID/GUID for this Role Assignment - one will be generated if not specified.
+		Changing this forces a new resource to be created.
+	EOD
+  default     = null
+  type        = string
+}
+
 variable "scope" {
   description = <<EOD
-    Possible 'type' values are:
-    - management_group (requires 'name')
-    - subscription (requires 'name')
-    - client_config (requires nothing) // TODO: Principala tasi
-    - resource_group (requires 'name')
-    - resource (requires 'resource' block)
-    'resource.name' should be entered instead of 'name' if 'type' is 'resource'.
-    'resource.type' list can be found at https://learn.microsoft.com/en-us/azure/governance/resource-graph/reference/supported-tables-resources
-  EOD
-  type = object({
-    type = string
-    name = optional(string, null)
-    resource = optional(object({
-      name                = optional(string)
-      type                = optional(string)
-      resource_group_name = optional(string)
-      required_tags       = optional(map(string))
-    }), null)
-  })
+		(Required) The scope at which the Role Assignment applies to, such as /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333, /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup, or /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup/providers/Microsoft.Compute/virtualMachines/myVM, or /providers/Microsoft.Management/managementGroups/myMG.
+		Changing this forces a new resource to be created.
+	EOD
+  type        = string
 }
 
-variable "principal" {
+variable "role_definition_id" {
   description = <<EOD
-    Possible 'type' values are:
-    - user (needs 'name')
-    - service_principal (needs 'name')
-    - group (needs 'name')
-    - user_assigned_identity (needs 'identity_resource')
-    - system_assigned_identity (needs 'system_assigned_identity_resource')
-    Azure services that can use managed identities are listed at https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/managed-identities-status
-    'system_assigned_identity_resource.type' list can be found at https://learn.microsoft.com/en-us/azure/governance/resource-graph/reference/supported-tables-resources
-    Possible 'system_assigned_identity_resource.os_type' values are:
-    - linux
-    - windows
-  EOD
-  type = object({
-    type = string
-    name = optional(string, null)
-    user_assigned_identity = optional(object({
-      name                = string
-      resource_group_name = string
-    }), null)
-    system_assigned_identity_resource = optional(object({
-      name                = string
-      type                = string
-      resource_group_name = string
-      required_tags       = optional(map(string))
-      os_type             = optional(string)
-    }), null)
-  })
+		(Optional) The Scoped-ID of the Role Definition.
+		Changing this forces a new resource to be created.
+		Conflicts with role_definition_name.
+	EOD
+  default     = null
+  type        = string
 }
 
-variable "role_definition" {
-  type = object({
-    built_in = optional(object({
-      name = string
-    }), null)
-    custom = optional(object({
-      existing = optional(object({
-        name = string
-      }), null)
-      new = optional(any, null) // Pass directly to the 'role_definition' module
-    }))
-  })
+variable "role_definition_name" {
+  description = <<EOD
+		(Optional) The name of a built-in Role.
+		Changing this forces a new resource to be created.
+		Conflicts with role_definition_id.
+	EOD
+  default     = null
+  type        = string
+}
+
+variable "principal_id" {
+  description = <<EOD
+		(Required) The ID of the Principal (User, Group or Service Principal) to assign the Role Definition to.
+		Changing this forces a new resource to be created.
+		NOTE: The Principal ID is also known as the Object ID (ie not the "Application ID" for applications).
+	EOD
+  type        = string
 }
