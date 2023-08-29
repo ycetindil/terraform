@@ -1,11 +1,19 @@
+# Manages a Windows Web App.
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_web_app
 resource "azurerm_windows_web_app" "windows_web_app" {
-  name                          = var.name
-  resource_group_name           = var.resource_group_name
-  location                      = var.location
-  service_plan_id               = var.service_plan_id
-  https_only                    = var.https_only
-  public_network_access_enabled = var.public_network_access_enabled
-  app_settings                  = var.app_settings
+  location            = var.location
+  name                = var.name
+  resource_group_name = var.resource_group_name
+  service_plan_id     = var.service_plan_id
+
+  site_config {
+    application_stack {
+      current_stack  = var.site_config.application_stack.current_stack
+      dotnet_version = var.site_config.application_stack.dotnet_version
+    }
+  }
+
+  app_settings = var.app_settings
 
   dynamic "connection_string" {
     for_each = var.connection_strings
@@ -17,7 +25,17 @@ resource "azurerm_windows_web_app" "windows_web_app" {
     }
   }
 
-  virtual_network_subnet_id = var.virtual_network_subnet_id
+  https_only                    = var.https_only
+  public_network_access_enabled = var.public_network_access_enabled
+
+  dynamic "identity" {
+    for_each = var.identity != null ? [1] : []
+
+    content {
+      type         = var.identity.type
+      identity_ids = var.identity.identity_ids
+    }
+  }
 
   dynamic "logs" {
     for_each = var.logs != null ? [1] : []
@@ -46,21 +64,6 @@ resource "azurerm_windows_web_app" "windows_web_app" {
     }
   }
 
-  tags = var.tags
-
-  dynamic "identity" {
-    for_each = var.identity != null ? [1] : []
-
-    content {
-      type         = var.identity.type
-      identity_ids = var.identity.identity_ids
-    }
-  }
-
-  site_config {
-    application_stack {
-      current_stack  = var.site_config.application_stack.current_stack
-      dotnet_version = var.site_config.application_stack.dotnet_version
-    }
-  }
+  tags                      = var.tags
+  virtual_network_subnet_id = var.virtual_network_subnet_id
 }

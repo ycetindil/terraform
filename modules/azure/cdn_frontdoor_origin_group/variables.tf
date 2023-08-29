@@ -35,9 +35,9 @@ variable "load_balancing" {
   })
 }
 
-variable "variable_name" {
+variable "health_probe" {
   description = <<EOD
-    health_probe - (Optional) A health_probe block as defined below.
+    (Optional) A health_probe block as defined below.
     A health_probe block supports the following:
     - protocol - (Required) Specifies the protocol to use for health probe.
       Possible values are Http and Https.

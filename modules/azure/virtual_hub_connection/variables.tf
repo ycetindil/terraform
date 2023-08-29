@@ -1,6 +1,6 @@
 variable "name" {
   description = <<EOD
-		 - (Required) The Name which should be used for this Connection, which must be unique within the Virtual Hub.
+		(Required) The Name which should be used for this Connection, which must be unique within the Virtual Hub.
 		Changing this forces a new resource to be created.
 	EOD
   type        = string
@@ -8,7 +8,7 @@ variable "name" {
 
 variable "virtual_hub_id" {
   description = <<EOD
-		 - (Required) The ID of the Virtual Hub within which this connection should be created.
+		(Required) The ID of the Virtual Hub within which this connection should be created.
 		Changing this forces a new resource to be created.
 	EOD
   type        = string
@@ -16,7 +16,7 @@ variable "virtual_hub_id" {
 
 variable "remote_virtual_network_id" {
   description = <<EOD
-		 - (Required) The ID of the Virtual Network which the Virtual Hub should be connected to.
+		(Required) The ID of the Virtual Network which the Virtual Hub should be connected to.
 		Changing this forces a new resource to be created.
 	EOD
   type        = string
@@ -24,7 +24,7 @@ variable "remote_virtual_network_id" {
 
 variable "internet_security_enabled" {
   description = <<EOD
-		 - (Optional) Should Internet Security be enabled to secure internet traffic?
+		(Optional) Should Internet Security be enabled to secure internet traffic?
 		Defaults to false.
 	EOD
   default     = null
@@ -33,7 +33,7 @@ variable "internet_security_enabled" {
 
 variable "routing" {
   description = <<EOD
-		 - (Optional) A routing block as defined below.
+		(Optional) A routing block as defined below.
 		A routing block supports the following:
 		- associated_route_table_id - (Optional) The ID of the route table associated with this Virtual Hub connection.
 		- propagated_route_table - (Optional) A propagated_route_table block as defined below.

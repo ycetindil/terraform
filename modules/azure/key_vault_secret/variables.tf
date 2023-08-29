@@ -6,9 +6,9 @@ variable "name" {
   type        = string
 }
 
-variable "variable_name" {
+variable "value" {
   description = <<EOD
-		value - (Required) Specifies the value of the Key Vault Secret.
+		(Required) Specifies the value of the Key Vault Secret.
 		- NOTE: Key Vault strips newlines. To preserve newlines in multi-line secrets try replacing them with \n or by base 64 encoding them with replace(file("my_secret_file"), "/\n/", "\n") or base64encode(file("my_secret_file")), respectively.
 	EOD
   type        = string

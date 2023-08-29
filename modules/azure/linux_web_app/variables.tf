@@ -177,7 +177,8 @@ variable "logs" {
         - sas_url - (Required) SAS url to an Azure blob container with read/write/list/delete permissions.
       - file_system - (Optional) A file_system block as defined below.
         A file_system block supports the following:
-        - retention_in_days - (Required) The retention period in days. A value of 0 means no retention.
+        - retention_in_days - (Required) The retention period in days.
+					A value of 0 means no retention.
         - retention_in_mb - (Required) The maximum size in megabytes that log files can use.
   EOD
   default     = null
