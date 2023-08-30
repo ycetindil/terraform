@@ -1,5 +1,5 @@
 module "mssql_server_xxx" {
-  source = "./modules/mssql_server"
+  source = "github.com/ycetindil/terraform/tree/main/modules/azure/mssql_server"
 
   name                = var.mssql_server_xxx.name
   resource_group_name = module.resource_group_xxx.name

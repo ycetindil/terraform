@@ -1,5 +1,5 @@
 module "dns_cname_record_xxx" {
-  source = "./modules/dns_cname_record"
+  source = "github.com/ycetindil/terraform/tree/main/modules/azure/dns_cname_record"
 
   name                = var.dns_cname_record_xxx.name
   resource_group_name = module.resource_group_xxx.name

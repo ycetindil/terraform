@@ -1,5 +1,5 @@
 module "monitor_diagnostic_settings_xxx" {
-  source = "./modules/monitor_diagnostic_setting"
+  source = "github.com/ycetindil/terraform/tree/main/modules/azure/monitor_diagnostic_setting"
 
   name                       = var.monitor_diagnostic_settings_xxx.name
   target_resource_id         = module.mssql_database_xxx.id

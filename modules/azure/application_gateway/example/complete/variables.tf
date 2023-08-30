@@ -1,5 +1,5 @@
 application_gateway_xxx = {
-  name = "agw-project_101-prod-eastus-001"
+  name = "agw-project101-prod-eastus-001"
   # resource_group_name is provided by the root main.
   location = "eastus"
   backend_address_pools = {

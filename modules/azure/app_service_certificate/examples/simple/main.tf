@@ -1,5 +1,5 @@
 module "app_service_certificate_xxx" {
-  source = "./modules/app_service_certificate"
+  source = "github.com/ycetindil/terraform/tree/main/modules/azure/app_service_certificate"
 
   name                = var.app_service_certificate_xxx.name
   resource_group_name = module.resource_group_xxx.name

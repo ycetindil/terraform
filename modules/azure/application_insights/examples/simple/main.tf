@@ -1,5 +1,5 @@
 module "application_insights_xxx" {
-  source = "./modules/application_insights"
+  source = "github.com/ycetindil/terraform/tree/main/modules/azure/application_insights"
 
   name                = var.application_insights_xxx.name
   resource_group_name = module.resource_group_xxx.name

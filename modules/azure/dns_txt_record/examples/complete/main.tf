@@ -1,5 +1,5 @@
 module "dns_txt_record_xxx" {
-  source = "./modules/dns_txt_record"
+  source = "github.com/ycetindil/terraform/tree/main/modules/azure/dns_txt_record"
 
   name                = "asuid.${var.dns_txt_record_xxx.subdomain_name}"
   resource_group_name = module.resource_group_xxx.name

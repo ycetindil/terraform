@@ -1,5 +1,5 @@
 module "key_vault_access_policy_xxx" {
-  source = "./modules/key_vault_access_policy"
+  source = "github.com/ycetindil/terraform/tree/main/modules/azure/key_vault_access_policy"
 
   key_vault_id            = data.azurerm_key_vault.key_vault_xxx.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
