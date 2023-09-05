@@ -1,8 +1,8 @@
-module "virtual_network_xxx" {
+module "vnet_project102_prod_eastus_001" { // app
   source = "github.com/ycetindil/terraform/tree/main/modules/azure/virtual_network"
 
-  name                = var.virtual_network_xxx.name
-  location            = var.virtual_network_xxx.location
-  resource_group_name = module.resource_group_xxx.name
-  address_space       = var.virtual_network_xxx.address_space
+  name                = var.vnet_project102_prod_eastus_001.name
+  resource_group_name = module.rg_project102_prod_eastus_001.name
+  address_space       = var.vnet_project102_prod_eastus_001.address_space
+  location            = var.vnet_project102_prod_eastus_001.location
 }

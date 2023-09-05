@@ -11,7 +11,6 @@ resource "azurerm_cdn_frontdoor_origin" "cdn_frontdoor_origin" {
   https_port                     = var.https_port
   origin_host_header             = var.origin_host_header
   priority                       = var.priority
-  weight                         = var.weight
 
   dynamic "private_link" {
     for_each = var.private_link != null ? [1] : []
@@ -23,4 +22,6 @@ resource "azurerm_cdn_frontdoor_origin" "cdn_frontdoor_origin" {
       private_link_target_id = var.private_link.private_link_target_id
     }
   }
+	
+  weight                         = var.weight
 }
